@@ -9,14 +9,19 @@ import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.apkapiservice.bean.HouseType;
+import com.example.apkapiservice.bean.Room;
 import com.example.apkapiservice.bean.TicaInnerStatus;
 import com.example.apkapiservice.bean.WindStatus;
 import com.example.apkapiservice.controller.AirControlHandler;
+import com.example.apkapiservice.controller.RoomManager;
 import com.example.apkapiservice.controller.WindControlHandler;
 import com.example.apkapiservice.service.ApiService;
 
@@ -46,6 +51,13 @@ public class MainActivity extends AppCompatActivity {
     private Button btnStartService;
     private Button btnStopService;
     private Button btnRefreshStatus;
+    private Button btnApplyHouseType;
+    
+    // 房间类型选择
+    private RadioGroup rgHouseType;
+    private RadioButton rbHouseT2;
+    private RadioButton rbHouseT41;
+    private RadioButton rbHouseT42;
     
     // API测试按钮
     private Button btnTestAirStatus;
@@ -54,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private Button btnTestWindStatus;
     private Button btnTestWindPowerOn;
     private Button btnTestWindPowerOff;
+    private Button btnTestRoomInit;
+    private Button btnTestRoomStatus;
     
     private String deviceIpAddress = "";
     private final int API_PORT = 8080;
@@ -88,6 +102,13 @@ public class MainActivity extends AppCompatActivity {
         btnStartService = findViewById(R.id.btn_start_service);
         btnStopService = findViewById(R.id.btn_stop_service);
         btnRefreshStatus = findViewById(R.id.btn_refresh_status);
+        btnApplyHouseType = findViewById(R.id.btn_apply_house_type);
+        
+        // 初始化房间类型选择
+        rgHouseType = findViewById(R.id.rg_house_type);
+        rbHouseT2 = findViewById(R.id.rb_house_t2);
+        rbHouseT41 = findViewById(R.id.rb_house_t4_1);
+        rbHouseT42 = findViewById(R.id.rb_house_t4_2);
         
         // 初始化API测试按钮
         btnTestAirStatus = findViewById(R.id.btn_test_air_status);
@@ -96,6 +117,10 @@ public class MainActivity extends AppCompatActivity {
         btnTestWindStatus = findViewById(R.id.btn_test_wind_status);
         btnTestWindPowerOn = findViewById(R.id.btn_test_wind_power_on);
         btnTestWindPowerOff = findViewById(R.id.btn_test_wind_power_off);
+        
+        // 添加房间API测试按钮
+        btnTestRoomInit = findViewById(R.id.btn_test_room_init);
+        btnTestRoomStatus = findViewById(R.id.btn_test_room_status);
         
         // 获取设备IP地址并更新显示
         deviceIpAddress = getLocalIpAddress();
@@ -130,7 +155,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         
-        // API测试按钮点击事件
+        // 应用户型设置按钮
+        btnApplyHouseType.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                applyHouseType();
+            }
+        });
+        
+        // 测试获取空调状态
         btnTestAirStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -138,20 +171,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         
+        // 测试空调开机（默认机器编号1）
         btnTestAirPowerOn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                testApiRequest("/api/air/control?action=power&value=128", "GET");
+                testApiRequest("/api/air/control?action=power&value=1&machineNo=1", "GET");
             }
         });
         
+        // 测试空调关机（默认机器编号1）
         btnTestAirPowerOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                testApiRequest("/api/air/control?action=power&value=0", "GET");
+                testApiRequest("/api/air/control?action=power&value=0&machineNo=1", "GET");
             }
         });
         
+        // 测试获取新风状态
         btnTestWindStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -159,19 +195,41 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         
+        // 测试新风开机
         btnTestWindPowerOn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                testApiRequest("/api/wind/control?action=power&value=1", "GET");
+                testApiRequest("/api/wind/control", "POST", "{\"controlType\":\"power\",\"value\":1}");
             }
         });
         
+        // 测试新风关机
         btnTestWindPowerOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                testApiRequest("/api/wind/control?action=power&value=0", "GET");
+                testApiRequest("/api/wind/control", "POST", "{\"controlType\":\"power\",\"value\":0}");
             }
         });
+        
+        // 测试房间初始化
+        if (btnTestRoomInit != null) {
+            btnTestRoomInit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    testApiRequest("/api/rooms/init", "POST", "{}");
+                }
+            });
+        }
+        
+        // 测试获取房间状态
+        if (btnTestRoomStatus != null) {
+            btnTestRoomStatus.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    testApiRequest("/api/rooms/status", "GET");
+                }
+            });
+        }
     }
     
     /**
@@ -218,71 +276,72 @@ public class MainActivity extends AppCompatActivity {
      * @param method 请求方法
      */
     private void testApiRequest(final String endpoint, final String method) {
-        // 更新UI显示正在请求
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                tvApiResponse.setText("正在发送请求...");
-            }
-        });
+        testApiRequest(endpoint, method, null);
+    }
+    
+    /**
+     * 测试API请求
+     * @param endpoint API端点
+     * @param method 请求方法
+     * @param jsonBody JSON请求体
+     */
+    private void testApiRequest(final String endpoint, final String method, final String jsonBody) {
+        // 显示加载中
+        tvApiResponse.setText("请求中...");
         
-        // 创建后台线程发送请求
+        Log.d(TAG, "testApiRequest endpoint: " + endpoint);
+        Log.d(TAG, "testApiRequest method: " + method);
+        Log.d(TAG, "testApiRequest jsonBody: " + jsonBody);
         new Thread(new Runnable() {
             @Override
             public void run() {
-                HttpURLConnection connection = null;
-                BufferedReader reader = null;
-                final StringBuilder response = new StringBuilder();
+                String result = "请求失败";
                 
                 try {
-                    // 构建完整URL - 使用127.0.0.1测试自己的请求
-                    String urlString = "http://127.0.0.1:" + API_PORT + endpoint;
-                    URL url = new URL(urlString);
-                    
-                    // 创建连接
-                    connection = (HttpURLConnection) url.openConnection();
+                    String urlStr = "http://" + deviceIpAddress + ":" + API_PORT + endpoint;
+                    URL url = new URL(urlStr);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                     connection.setRequestMethod(method);
                     connection.setConnectTimeout(5000);
                     connection.setReadTimeout(5000);
                     
-                    // 获取响应状态码
+                    // 如果有请求体，设置Content-Type并写入数据
+                    if (jsonBody != null && !jsonBody.isEmpty()) {
+                        connection.setRequestProperty("Content-Type", "application/json");
+                        connection.setDoOutput(true);
+                        connection.getOutputStream().write(jsonBody.getBytes("UTF-8"));
+                    }
+                    
                     int responseCode = connection.getResponseCode();
-                    response.append("状态码: ").append(responseCode).append("\n");
-                    
-                    // 读取响应内容
                     if (responseCode == HttpURLConnection.HTTP_OK) {
-                        reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                        BufferedReader reader = new BufferedReader(
+                                new InputStreamReader(connection.getInputStream()));
+                        StringBuilder response = new StringBuilder();
                         String line;
+                        
                         while ((line = reader.readLine()) != null) {
-                            response.append(line).append("\n");
+                            response.append(line);
                         }
+                        
+                        reader.close();
+                        result = response.toString();
                     } else {
-                        response.append("请求失败: ").append(connection.getResponseMessage());
-                    }
-                } catch (IOException e) {
-                    response.append("请求异常: ").append(e.getMessage());
-                    Log.e(TAG, "请求异常", e);
-                } finally {
-                    // 关闭连接和读取器
-                    if (reader != null) {
-                        try {
-                            reader.close();
-                        } catch (IOException e) {
-                            Log.e(TAG, "关闭读取器失败", e);
-                        }
-                    }
-                    if (connection != null) {
-                        connection.disconnect();
+                        result = "请求失败，响应码: " + responseCode;
                     }
                     
-                    // 更新UI显示响应结果
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            tvApiResponse.setText(response.toString());
-                        }
-                    });
+                    connection.disconnect();
+                } catch (IOException e) {
+                    Log.e(TAG, "API请求失败", e);
+                    result = "请求异常: " + e.getMessage();
                 }
+                
+                final String finalResult = result;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        tvApiResponse.setText(finalResult);
+                    }
+                });
             }
         }).start();
     }
@@ -325,20 +384,44 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
+     * 应用户型设置
+     */
+    private void applyHouseType() {
+        String houseType = "T4-1"; // 默认T4-1户型
+        
+        if (rbHouseT2.isChecked()) {
+            houseType = "T2";
+        } else if (rbHouseT41.isChecked()) {
+            houseType = "T4-1";
+        } else if (rbHouseT42.isChecked()) {
+            houseType = "T4-2";
+        } else {
+            houseType = "T4-1";
+        }
+        
+        final String finalHouseType = houseType;
+        Log.d(TAG, "设置户型类型: applyHouseType finalHouseType: " + finalHouseType);
+        testApiRequest("/api/house/type", "POST", "{\"houseType\":\"" + finalHouseType + "\"}");
+    }
+    
+    /**
      * 刷新设备状态
      */
     private void refreshDeviceStatus() {
-        // 创建后台线程读取设备状态
+        // 显示加载中
+        tvAirStatus.setText("空调状态：读取中...");
+        tvWindStatus.setText("新风状态：读取中...");
+        
         new Thread(new Runnable() {
             @Override
             public void run() {
                 // 读取空调状态
-                final TicaInnerStatus airStatus = AirControlHandler.getInstance().readInnerStatus();
+                final TicaInnerStatus airStatus = AirControlHandler.getInstance().readStatus();
                 
                 // 读取新风状态
                 final WindStatus windStatus = WindControlHandler.getInstance().readStatus();
                 
-                // 在UI线程更新显示
+                // 更新UI
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

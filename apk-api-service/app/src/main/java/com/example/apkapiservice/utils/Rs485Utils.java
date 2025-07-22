@@ -84,6 +84,33 @@ public class Rs485Utils {
         
         return bytes;
     }
+    
+    /**
+     * 生成单寄存器写入指令（功能码06）
+     *
+     * @param slaveAddress  从机地址
+     * @param functionCode  功能码（通常为06）
+     * @param registerAddress 寄存器地址
+     * @param registerValue   寄存器值
+     * @return 单寄存器写入指令的字节数组
+     */
+    public byte[] getSingleWriteSendBytes(int slaveAddress, int functionCode, int registerAddress, int registerValue) {
+        byte[] bytes = new byte[8]; // 单寄存器写入命令长度固定为8字节
+        
+        bytes[0] = (byte) slaveAddress;
+        bytes[1] = (byte) functionCode;
+        bytes[2] = (byte) (registerAddress >> 8);
+        bytes[3] = (byte) (registerAddress & 0xFF);
+        bytes[4] = (byte) (registerValue >> 8);
+        bytes[5] = (byte) (registerValue & 0xFF);
+        
+        // 计算CRC校验码
+        int crc = calculateCRC(bytes, 6);
+        bytes[6] = (byte) (crc & 0xFF);
+        bytes[7] = (byte) (crc >> 8);
+        
+        return bytes;
+    }
 
     /**
      * 校验返回数据是否正确
@@ -98,9 +125,31 @@ public class Rs485Utils {
             return false;
         }
         
+        // 添加详细的调试日志
+        Log.e(TAG, "*** Modbus协议校验 ***");
+        Log.e(TAG, "请求数据: " + bytesToHex(request));
+        Log.e(TAG, "响应数据: " + bytesToHex(response));
+        Log.e(TAG, "请求从机地址: 0x" + String.format("%02X", request[0] & 0xFF));
+        Log.e(TAG, "响应从机地址: 0x" + String.format("%02X", response[0] & 0xFF));
+        Log.e(TAG, "请求功能码: 0x" + String.format("%02X", request[1] & 0xFF));
+        Log.e(TAG, "响应功能码: 0x" + String.format("%02X", response[1] & 0xFF));
+        
+        // 检查是否为Modbus异常响应
+        if ((response[1] & 0x80) != 0) {
+            int exceptionCode = response[2] & 0xFF;
+            Log.e(TAG, "*** Modbus异常响应 ***");
+            Log.e(TAG, "异常功能码: 0x" + String.format("%02X", response[1] & 0xFF));
+            Log.e(TAG, "异常码: 0x" + String.format("%02X", exceptionCode));
+            
+            Log.e(TAG, "异常原因: " + getModbusExceptionMessage(exceptionCode));
+            return false;
+        }
+        
         // 检查从机地址和功能码
         if (response[0] != request[0] || response[1] != request[1]) {
             Log.e(TAG, "Slave address or function code mismatch");
+            Log.e(TAG, "地址匹配: " + (response[0] == request[0]));
+            Log.e(TAG, "功能码匹配: " + (response[1] == request[1]));
             return false;
         }
         
@@ -175,5 +224,35 @@ public class Rs485Utils {
         }
         
         return result;
+    }
+    
+    /**
+     * 获取Modbus异常码的描述信息
+     */
+    private String getModbusExceptionMessage(int exceptionCode) {
+        switch (exceptionCode) {
+            case 0x01: return "非法功能码";
+            case 0x02: return "非法数据地址";
+            case 0x03: return "非法数据值";
+            case 0x04: return "从机设备故障";
+            case 0x05: return "确认";
+            case 0x06: return "从机设备忙";
+            case 0x08: return "内存奇偶校验错误";
+            case 0x0A: return "网关路径不可用";
+            case 0x0B: return "网关目标设备响应失败";
+            default: return "未知异常码: 0x" + String.format("%02X", exceptionCode);
+        }
+    }
+    
+    /**
+     * 将字节数组转换为十六进制字符串
+     */
+    private String bytesToHex(byte[] bytes) {
+        if (bytes == null) return "null";
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b & 0xFF));
+        }
+        return sb.toString().trim();
     }
 }

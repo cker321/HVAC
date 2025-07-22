@@ -1,10 +1,12 @@
 package com.example.apkapiservice.server;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.example.apkapiservice.bean.TicaInnerStatus;
 import com.example.apkapiservice.bean.WindStatus;
 import com.example.apkapiservice.controller.AirControlHandler;
+import com.example.apkapiservice.controller.RoomController;
 import com.example.apkapiservice.controller.WindControlHandler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -15,7 +17,10 @@ import fi.iki.elonen.NanoHTTPD.Response;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import com.example.apkapiservice.bean.Room;
 
 /**
  * HTTP API服务器
@@ -24,9 +29,13 @@ import java.util.Map;
 public class HttpApiServer extends NanoHTTPD {
     private static final String TAG = "HttpApiServer";
     private final Gson gson;
+    private final Context context;
+    private final RoomController roomController;
     
-    public HttpApiServer(int port) {
+    public HttpApiServer(int port, Context context) {
         super(port);
+        this.context = context;
+        this.roomController = new RoomController(context);
         gson = new GsonBuilder().setPrettyPrinting().create();
         Log.i(TAG, "HTTP API服务器初始化，端口：" + port);
     }
@@ -40,6 +49,41 @@ public class HttpApiServer extends NanoHTTPD {
         Log.i(TAG, "收到请求：" + method + " " + uri);
         
         try {
+            // 如果是POST请求且Content-Type为application/json，尝试解析JSON请求体
+            if (Method.POST.equals(method)) {
+                String contentType = session.getHeaders().get("content-type");
+                if (contentType != null && contentType.toLowerCase().contains("application/json")) {
+                    try {
+                        // 获取请求体长度
+                        int contentLength = Integer.parseInt(session.getHeaders().get("content-length"));
+                        byte[] buffer = new byte[contentLength];
+                        session.getInputStream().read(buffer, 0, contentLength);
+                        String postData = new String(buffer, "UTF-8");
+                        
+                        Log.d(TAG, "解析JSON请求体: " + postData);
+                        
+                        // 将请求体添加到参数中
+                        params.put("postData", postData);
+                        
+                        // 尝试解析JSON并将其字段添加到参数中
+                        try {
+                            Map<String, Object> jsonData = gson.fromJson(postData, Map.class);
+                            if (jsonData != null) {
+                                for (Map.Entry<String, Object> entry : jsonData.entrySet()) {
+                                    if (entry.getValue() != null) {
+                                        params.put(entry.getKey(), entry.getValue().toString());
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "解析JSON失败", e);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "读取请求体失败", e);
+                    }
+                }
+            }
+            
             // 处理API请求
             if (uri.startsWith("/api/")) {
                 return handleApiRequest(uri, method, params);
@@ -70,6 +114,17 @@ public class HttpApiServer extends NanoHTTPD {
         // 系统信息API
         if (uri.equals("/api/system/info")) {
             return handleSystemInfoRequest();
+        }
+        
+        // 房间控制API
+        if (uri.startsWith("/api/house/")) {
+            return handleRoomRequest(uri, method, params);
+        }
+
+                
+        // 房间控制API
+        if (uri.startsWith("/api/rooms/")) {
+            return handleRoomRequest(uri, method, params);
         }
         
         // 未知API
@@ -105,80 +160,112 @@ public class HttpApiServer extends NanoHTTPD {
         // 获取空调状态
         if (uri.equals("/api/air/status")) {
             // 检查串口是否可用
-            if (!isSerialPortAvailable()) {
-                // 在手机环境下返回模拟数据
-                Map<String, Object> result = new HashMap<>();
-                result.put("code", 0);
-                result.put("message", "success");
+            // if (!isSerialPortAvailable()) {
+            //     // 在手机环境下返回模拟数据
+            //     Map<String, Object> result = new HashMap<>();
+            //     result.put("code", 0);
+            //     result.put("message", "success");
                 
-                // 创建模拟空调状态
-                TicaInnerStatus mockStatus = new TicaInnerStatus(1, "主卧");
-                mockStatus.setPowerSetting(false); // 默认关机
-                mockStatus.setSettingMode(AirControlHandler.MODE_COOL);  // 制冷模式
-                mockStatus.setSettingTemp(26); // 默认温度
-                mockStatus.setSettingWindSpeed(AirControlHandler.SPEED_AUTO);  // 自动风速
-                mockStatus.setReturnAirTemperature(25.5f); // 室内温度
+            //     // 创建模拟空调状态
+            //     TicaInnerStatus mockStatus = new TicaInnerStatus(1, "主卧");
+            //     mockStatus.setPowerSetting(false); // 默认关机
+            //     mockStatus.setSettingMode(AirControlHandler.MODE_COOL);  // 制冷模式
+            //     mockStatus.setSettingTemp(26); // 默认温度
+            //     mockStatus.setSettingWindSpeed(AirControlHandler.SPEED_AUTO);  // 自动风速
+            //     mockStatus.setReturnAirTemperature(25.5f); // 室内温度
                 
-                result.put("data", mockStatus);
-                result.put("note", "注意：当前在手机环境下运行，串口不可用，返回模拟数据");
+            //     result.put("data", mockStatus);
+            //     result.put("note", "注意：当前在手机环境下运行，串口不可用，返回模拟数据");
                 
-                return newJsonResponse(result);
-            }
-            
-            // 获取机器编号参数
-            int machineNo = 1;
-            if (params.containsKey("machineNo")) {
-                try {
-                    machineNo = Integer.parseInt(params.get("machineNo"));
-                } catch (NumberFormatException e) {
-                    return newErrorResponse("无效的机器编号");
-                }
-            }
-            
-            // 设置当前操作的机器
-            airHandler.setMachineNo(machineNo);
+            //     return newJsonResponse(result);
+            // }
             
             try {
-                // 读取空调状态
-                TicaInnerStatus status = airHandler.readInnerStatus();
+                // 基于户型获取所有房间的设备状态
+                Map<String, Object> roomStatusResult = roomController.getAllRoomStatus();
                 
-                // 检查状态是否有效
-                if (status == null) {
-                    return newErrorResponse("读取空调状态失败，返回空数据");
+                // 检查房间状态获取是否成功
+                if ((Integer) roomStatusResult.get("code") != 200) {
+                    return newJsonResponse(roomStatusResult);
                 }
                 
-                // 返回状态数据
+                @SuppressWarnings("unchecked")
+                Map<String, Object> roomData = (Map<String, Object>) roomStatusResult.get("data");
+                @SuppressWarnings("unchecked")
+                List<Room> rooms = (List<Room>) roomData.get("rooms");
+                
+                // 为每个房间获取实际的空调设备状态
+                Map<String, Object> roomsWithStatus = new HashMap<>();
+                
+                for (Room room : rooms) {
+                    Map<String, Object> roomInfo = new HashMap<>();
+                    roomInfo.put("machineNo", room.getMachineNo());
+                    roomInfo.put("roomName", room.getRoomName());
+                    roomInfo.put("deviceType", "air_conditioner"); // Room类默认都是空调设备
+                    
+                    // 获取空调设备状态
+                    try {
+                        // 设置机器编号
+                        airHandler.setMachineNo(room.getMachineNo());
+                        TicaInnerStatus airStatus = airHandler.readInnerStatus();
+                        
+                        if (airStatus != null) {
+                            roomInfo.put("deviceStatus", airStatus);
+                            roomInfo.put("statusAvailable", true);
+                        } else {
+                            roomInfo.put("deviceStatus", null);
+                            roomInfo.put("statusAvailable", false);
+                            roomInfo.put("statusMessage", "设备状态读取失败");
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "读取房间 " + room.getRoomName() + " 空调状态异常", e);
+                        roomInfo.put("deviceStatus", null);
+                        roomInfo.put("statusAvailable", false);
+                        roomInfo.put("statusMessage", "设备状态读取异常: " + e.getMessage());
+                    }
+                    
+                    roomsWithStatus.put(room.getRoomName(), roomInfo);
+                }
+                
+                // 构造返回结果
                 Map<String, Object> result = new HashMap<>();
                 result.put("code", 0);
                 result.put("message", "success");
-                result.put("data", status);
+                
+                Map<String, Object> data = new HashMap<>();
+                data.put("houseType", roomData.get("houseType"));
+                data.put("rooms", roomsWithStatus);
+                data.put("totalRooms", rooms.size());
+                
+                result.put("data", data);
                 
                 return newJsonResponse(result);
             } catch (Exception e) {
-                Log.e(TAG, "读取空调状态异常", e);
-                return newErrorResponse("读取空调状态异常: " + e.getMessage());
+                Log.e(TAG, "获取房间空调状态异常", e);
+                return newErrorResponse("获取房间空调状态异常: " + e.getMessage());
             }
         }
         
         // 控制空调
         if (uri.equals("/api/air/control")) {
             // 检查串口是否可用
-            if (!isSerialPortAvailable()) {
-                Map<String, Object> result = new HashMap<>();
-                result.put("code", 0);
-                result.put("message", "success");
-                result.put("data", null);
-                result.put("note", "注意：当前在手机环境下运行，串口不可用，命令已模拟执行");
+            // if (!isSerialPortAvailable()) {
+            //     Map<String, Object> result = new HashMap<>();
+            //     result.put("code", 0);
+            //     result.put("message", "success");
+            //     result.put("data", null);
+            //     result.put("note", "注意：当前在手机环境下运行，串口不可用，命令已模拟执行");
                 
-                return newJsonResponse(result);
-            }
+            //     return newJsonResponse(result);
+            // }
             
             // 获取控制参数
             int machineNo = getIntParam(params, "machineNo", 1);
             String action = params.get("action");
-            
+            Log.e(TAG, "testApi: 控制空调：" + params);
             if (action == null || action.isEmpty()) {
-                return newErrorResponse("缺少action参数");
+                // return newErrorResponse("缺少action参数");
+                action = "power";
             }
             
             // 设置当前操作的机器
@@ -279,7 +366,8 @@ public class HttpApiServer extends NanoHTTPD {
             String action = params.get("action");
             
             if (action == null || action.isEmpty()) {
-                return newErrorResponse("缺少action参数");
+                // return newErrorResponse("缺少action参数");
+                action = "power";
             }
             
             boolean success = false;
@@ -333,6 +421,106 @@ public class HttpApiServer extends NanoHTTPD {
         result.put("data", info);
         
         return newJsonResponse(result);
+    }
+
+    // 处理房间
+    private Response handleRoomRequest(String uri, NanoHTTPD.Method method, Map<String, String> params) {
+        RoomController roomController = new RoomController(context);
+        
+        try {
+            // 设置户型 post请求
+            if (uri.equals("/api/house/type") && method == Method.POST) {
+                Map<String, Object> requestParams = new HashMap<>();
+                
+                // 尝试从URL参数中获取
+                if (params.containsKey("houseType")) {
+                    requestParams.put("houseType", params.get("houseType"));
+                    Log.d(TAG, "设置户型类型: 从URL参数获取到houseType: " + params.get("houseType"));
+                }
+                
+                // 尝试从JSON请求体中获取
+                if (requestParams.isEmpty() && params.containsKey("postData")) {
+                    try {
+                        String postData = params.get("postData");
+                        Log.d(TAG, "设置户型类型: 收到JSON请求体: " + postData);
+                        
+                        if (postData != null && !postData.isEmpty()) {
+                            Map<String, Object> jsonData = gson.fromJson(postData, Map.class);
+                            if (jsonData != null && jsonData.containsKey("houseType")) {
+                                requestParams.put("houseType", jsonData.get("houseType"));
+                                Log.d(TAG, "设置户型类型: 从JSON请求体解析到houseType: " + jsonData.get("houseType"));
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "解析JSON请求体失败", e);
+                    }
+                }
+                
+                Log.d(TAG, "设置户型类型: handleRoomRequest params: " + params);
+                Log.d(TAG, "设置户型类型: handleRoomRequest requestParams: " + requestParams);
+                Map<String, Object> result = roomController.setHouseType(requestParams);
+                return newJsonResponse(result);
+            }
+            
+            // 初始化房间状态
+            if (uri.equals("/api/rooms/init") && method == Method.POST) {
+                Map<String, Object> requestParams = new HashMap<>();
+                if (params.containsKey("houseType")) {
+                    requestParams.put("houseType", params.get("houseType"));
+                }
+                Map<String, Object> result = roomController.initRoomStatus(requestParams);
+                return newJsonResponse(result);
+            }
+            
+            // 获取所有房间状态
+            if (uri.equals("/api/rooms/status") && method == Method.GET) {
+                Map<String, Object> result = roomController.getAllRoomStatus();
+                return newJsonResponse(result);
+            }
+            
+            // 获取指定房间状态
+            if (uri.startsWith("/api/rooms/status/") && method == Method.GET) {
+                String machineNoStr = uri.substring("/api/rooms/status/".length());
+                try {
+                    int machineNo = Integer.parseInt(machineNoStr);
+                    Map<String, Object> result = roomController.getRoomStatus(machineNo);
+                    return newJsonResponse(result);
+                } catch (NumberFormatException e) {
+                    return newErrorResponse("无效的机号: " + machineNoStr);
+                }
+            }
+            
+            // 控制指定房间
+            if (uri.startsWith("/api/rooms/control/") && method == Method.POST) {
+                String machineNoStr = uri.substring("/api/rooms/control/".length());
+                try {
+                    int machineNo = Integer.parseInt(machineNoStr);
+                    Map<String, Object> requestParams = new HashMap<>();
+                    if (params.containsKey("cmdType") && params.containsKey("value")) {
+                        try {
+                            int cmdType = Integer.parseInt(params.get("cmdType"));
+                            int value = Integer.parseInt(params.get("value"));
+                            requestParams.put("cmdType", cmdType);
+                            requestParams.put("value", value);
+                            Map<String, Object> result = roomController.controlRoom(machineNo, requestParams);
+                            return newJsonResponse(result);
+                        } catch (NumberFormatException e) {
+                            return newErrorResponse("无效的命令类型或值");
+                        }
+                    } else {
+                        return newErrorResponse("缺少必要参数: cmdType 和 value");
+                    }
+                } catch (NumberFormatException e) {
+                    return newErrorResponse("无效的机号: " + machineNoStr);
+                }
+            }
+            
+            // 未知的房间API请求
+            return newErrorResponse("未知的房间API请求: " + uri);
+        } catch (Exception e) {
+            Log.e(TAG, "处理房间请求异常", e);
+            return newErrorResponse("处理房间请求失败: " + e.getMessage());
+        }
     }
     
     /**
