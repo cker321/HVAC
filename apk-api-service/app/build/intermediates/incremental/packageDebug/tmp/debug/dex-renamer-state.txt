@@ -1,0 +1,4 @@
+#Mon Jul 21 22:52:47 CST 2025
+base.0=/Users/zhurui/WebstormProjects/apk/apk-api-service/app/build/intermediates/dex/debug/mergeDexDebug/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

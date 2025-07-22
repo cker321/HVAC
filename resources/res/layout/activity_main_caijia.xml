@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <include layout="@layout/include_header"/>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:background="#222222"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:orientation="vertical"
+            android:background="#2f3032"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="165">
+            <RelativeLayout
+                android:id="@+id/rlHvacWind"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/btn_hvac_wind"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"/>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line"/>
+            <RelativeLayout
+                android:id="@+id/rlHvacAir"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/btn_hvac_air"
+                    android:layout_centerInParent="true"/>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line"/>
+            <RelativeLayout
+                android:id="@+id/rlMulControl"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_mul_control"
+                    android:layout_centerInParent="true"/>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line"/>
+            <RelativeLayout
+                android:id="@+id/rlSafeAlarm"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/btn_safe_alarm"
+                    android:layout_centerInParent="true"/>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line"/>
+            <RelativeLayout
+                android:id="@+id/rlVideoTalk"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/btn_video_talk"
+                    android:layout_centerInParent="true"/>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line"/>
+        </LinearLayout>
+        <FrameLayout
+            android:id="@+id/flMain"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="858"/>
+    </LinearLayout>
+</LinearLayout>

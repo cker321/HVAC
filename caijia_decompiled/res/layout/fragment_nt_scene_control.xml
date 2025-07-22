@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:orientation="vertical" android:background="@drawable/shape_fragment_bg" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_margin="20.0px" android:baselineAligned="false"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true">
+        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <ImageView android:id="@id/rlModeLijia" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_mode_lijia" />
+            <ImageView android:id="@id/rlModeJujia" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_mode_jujia" android:layout_marginStart="64.0px" />
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="60.0px">
+            <ImageView android:id="@id/rlModeShuimian" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_mode_shuimian" />
+            <ImageView android:id="@id/rlModeJuhui" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_mode_juhui" android:layout_marginStart="64.0px" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

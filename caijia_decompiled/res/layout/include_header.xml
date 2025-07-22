@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:background="#ff393c41" android:layout_width="fill_parent" android:layout_height="75.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <RelativeLayout android:id="@id/rlLogo" android:layout_width="wrap_content" android:layout_height="fill_parent">
+        <ImageView android:layout_width="125.0dip" android:layout_height="30.0dip" android:src="@drawable/icon_landleaf" android:layout_centerVertical="true" android:layout_marginStart="30.0dip" />
+    </RelativeLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/llLine1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8.0dip" android:layout_marginBottom="8.0dip" android:layout_centerVertical="true" android:layout_marginStart="28.0dip" android:layout_toEndOf="@id/rlLogo">
+        <View android:background="#ff535257" android:layout_width="1.0dip" android:layout_height="fill_parent" />
+        <View android:background="#ff2a2c30" android:layout_width="1.0dip" android:layout_height="fill_parent" />
+    </LinearLayout>
+    <RelativeLayout android:id="@id/rlHome" android:layout_width="135.0dip" android:layout_height="fill_parent" android:layout_toEndOf="@id/llLine1">
+        <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_home" android:layout_centerVertical="true" android:layout_marginStart="15.0dip" />
+        <ImageView android:id="@id/ivQRCode" android:padding="5.0px" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_qrcode" android:layout_centerVertical="true" android:layout_marginEnd="15.0dip" android:layout_alignParentEnd="true" />
+    </RelativeLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/llLine2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8.0dip" android:layout_marginBottom="8.0dip" android:layout_toEndOf="@id/rlHome">
+        <View android:background="#ff535257" android:layout_width="1.0dip" android:layout_height="fill_parent" />
+        <View android:background="#ff2a2c30" android:layout_width="1.0dip" android:layout_height="fill_parent" />
+    </LinearLayout>
+    <com.dnake.desktop.widget.TimeView android:id="@id/timeView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_marginEnd="51.0dip" android:layout_alignParentEnd="true" />
+</RelativeLayout>

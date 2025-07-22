@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="空调和新风API服务"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/tv_service_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="服务状态：已停止"
+        android:textSize="18sp"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <Button
+            android:id="@+id/btn_start_service"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="启动服务"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btn_stop_service"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="停止服务"
+            android:enabled="false"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_refresh_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="刷新设备状态"
+        android:enabled="false"
+        android:layout_marginBottom="16dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_air_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="空调状态：未读取"
+                android:textSize="16sp"
+                android:layout_marginBottom="16dp"
+                android:background="#f0f0f0"
+                android:padding="8dp" />
+
+            <TextView
+                android:id="@+id/tv_wind_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="新风状态：未读取"
+                android:textSize="16sp"
+                android:layout_marginBottom="16dp"
+                android:background="#f0f0f0"
+                android:padding="8dp" />
+                
+            <!-- API测试区域 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="API测试"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+                
+            <!-- 空调API测试 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#e6f7ff"
+                android:padding="8dp"
+                android:layout_marginBottom="16dp">
+                
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="空调API"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+                    
+                <Button
+                    android:id="@+id/btn_test_air_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="获取空调状态"
+                    android:layout_marginBottom="8dp" />
+                    
+                <Button
+                    android:id="@+id/btn_test_air_power_on"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="空调开机"
+                    android:layout_marginBottom="8dp" />
+                    
+                <Button
+                    android:id="@+id/btn_test_air_power_off"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="空调关机"
+                    android:layout_marginBottom="8dp" />
+            </LinearLayout>
+            
+            <!-- 新风API测试 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#e6ffe6"
+                android:padding="8dp"
+                android:layout_marginBottom="16dp">
+                
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="新风API"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+                    
+                <Button
+                    android:id="@+id/btn_test_wind_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="获取新风状态"
+                    android:layout_marginBottom="8dp" />
+                    
+                <Button
+                    android:id="@+id/btn_test_wind_power_on"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="新风开机"
+                    android:layout_marginBottom="8dp" />
+                    
+                <Button
+                    android:id="@+id/btn_test_wind_power_off"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="新风关机"
+                    android:layout_marginBottom="8dp" />
+            </LinearLayout>
+            
+            <!-- API响应结果 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="API响应结果"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+                
+            <TextView
+                android:id="@+id/tv_api_response"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="尚未发送请求"
+                android:background="#f0f0f0"
+                android:padding="8dp"
+                android:minHeight="100dp"
+                android:textIsSelectable="true"
+                android:scrollbars="vertical" />
+        </LinearLayout>
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/tv_api_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="API服务地址：http://[设备IP]:8080"
+        android:textSize="14sp"
+        android:layout_marginTop="16dp"
+        android:gravity="center" />
+
+</LinearLayout>

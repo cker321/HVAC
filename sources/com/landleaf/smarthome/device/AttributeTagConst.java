@@ -1,0 +1,57 @@
+package com.landleaf.smarthome.device;
+
+/* loaded from: classes.dex */
+public interface AttributeTagConst {
+    public static final String CLEAR_FILTER_SCREEN = "screen_clearing";
+    public static final String CO2 = "co2";
+    public static final String COMMUNICATION_FAULT_1 = "communication_fault_1";
+    public static final String COMMUNICATION_FAULT_2 = "communication_fault_2";
+    public static final String DEHUMI = "dehumidification";
+    public static final String DIMING = "dimming";
+    public static final String ENERGY_SAVING_MODE = "energy_saving_mode";
+    public static final String FAULT_ALERT = "fault_warning";
+    public static final String GLC_1_FAULT_1 = "glc_1_fault_1";
+    public static final String GLC_1_FAULT_2 = "glc_1_fault_2";
+    public static final String GLC_1_FAULT_3 = "glc_1_fault_3";
+    public static final String GLC_1_FAULT_4 = "glc_1_fault_4";
+    public static final String GLC_1_FAULT_5 = "glc_1_fault_5";
+    public static final String GLC_WIND_STATUS = "glc_wind_status";
+    public static final String GLV_1_FAULT_1 = "glv_1_fault_1";
+    public static final String GLV_1_FAULT_2 = "glv_1_fault_2";
+    public static final String GLV_1_FAULT_3 = "glv_1_fault_3";
+    public static final String GLV_1_FAULT_4 = "glv_1_fault_4";
+    public static final String HCHO = "formaldehyde";
+    public static final String HUMIDITY = "humidity";
+    public static final String HUMI_ENABLE = "humidification_enable";
+    public static final String PLC_COLD_TEMP_1 = "plc_cold_1";
+    public static final String PLC_COLD_TEMP_2 = "plc_cold_2";
+    public static final String PLC_HOST_1_FAULT_1 = "plc_host_1_fault_1";
+    public static final String PLC_HOST_1_FAULT_2 = "plc_host_1_fault_2";
+    public static final String PLC_HOST_1_FAULT_3 = "plc_host_1_fault_3";
+    public static final String PLC_HOST_2_FAULT_1 = "plc_host_2_fault_1";
+    public static final String PLC_HOST_2_FAULT_2 = "plc_host_2_fault_2";
+    public static final String PLC_HOST_2_FAULT_3 = "plc_host_2_fault_3";
+    public static final String PLC_HOT_TEMP_1 = "plc_hot_1";
+    public static final String PLC_HOT_TEMP_2 = "plc_hot_2";
+    public static final String PLC_IN_WATER_TEMP_1 = "plc_return_water_1";
+    public static final String PLC_IN_WATER_TEMP_2 = "plc_return_water_2";
+    public static final String PLC_OUT_WATER_TEMP_1 = "plc_out_water_1";
+    public static final String PLC_OUT_WATER_TEMP_2 = "plc_out_water_1";
+    public static final String PLC_WIND_1_FAULT_1 = "plc_glc_1_fault_1";
+    public static final String PLC_WIND_1_FAULT_2 = "plc_glc_1_fault_2";
+    public static final String PLC_WIND_1_FAULT_3 = "plc_glc_1_fault_3";
+    public static final String PLC_WIND_2_FAULT_1 = "plc_glc_2_fault_1";
+    public static final String PLC_WIND_2_FAULT_2 = "plc_glc_2_fault_2";
+    public static final String PLC_WIND_2_FAULT_3 = "plc_glc_2_fault_3";
+    public static final String PM25 = "pm25";
+    public static final String RETURN_AIR_TEMP = "return_air_temperature";
+    public static final String SAFE_STATE = "arming_state";
+    public static final String SIEVE_TIME_1 = "glc_filter_time_1";
+    public static final String SIEVE_TIME_2 = "glc_filter_time_2";
+    public static final String SWITCH = "switch";
+    public static final String SYS_MODE = "mode";
+    public static final String TEMP = "temperature";
+    public static final String TEMP_SETTING = "setting_temperature";
+    public static final String VOC = "voc";
+    public static final String WIND_SPEED = "wind_speed";
+}

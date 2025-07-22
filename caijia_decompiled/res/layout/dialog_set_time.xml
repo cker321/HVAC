@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:background="@drawable/shape_fragment_bg" android:layout_width="524.0px" android:layout_height="379.0px"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="26.0px" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20.0px" android:text="@string/str_sleep_set" android:layout_centerHorizontal="true" />
+    <View android:background="#ffb79d65" android:layout_width="fill_parent" android:layout_height="1.0px" android:layout_marginTop="60.0px" android:layout_marginStart="52.0px" android:layout_marginEnd="52.0px" />
+    <LinearLayout android:orientation="horizontal" android:id="@id/timepicker" android:layout_width="250.0px" android:layout_height="wrap_content" android:layout_centerInParent="true">
+        <com.contrarywind.view.WheelView android:id="@id/year" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_weight="1.0" />
+        <com.contrarywind.view.WheelView android:id="@id/month" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_weight="1.1" />
+        <com.contrarywind.view.WheelView android:id="@id/day" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_weight="1.1" />
+        <com.contrarywind.view.WheelView android:id="@id/hour" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_weight="1.1" />
+        <TextView android:textSize="40.0px" android:textColor="#ff1eac29" android:gravity="center" android:layout_gravity="center_vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_maohao" />
+        <com.contrarywind.view.WheelView android:id="@id/min" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_weight="1.1" />
+        <com.contrarywind.view.WheelView android:id="@id/second" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_weight="1.1" />
+    </LinearLayout>
+    <View android:background="#ffb79d65" android:layout_width="fill_parent" android:layout_height="1.0px" android:layout_marginBottom="60.0px" android:layout_alignParentBottom="true" android:layout_marginStart="52.0px" android:layout_marginEnd="52.0px" />
+    <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="20.0px" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true">
+        <TextView android:textSize="26.0px" android:textColor="@android:color/white" android:layout_gravity="center" android:id="@id/btnCancal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_cancel" />
+        <TextView android:textSize="26.0px" android:textColor="@android:color/white" android:layout_gravity="center" android:id="@id/btnSure" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_sure" android:layout_marginStart="158.0px" />
+    </LinearLayout>
+</RelativeLayout>

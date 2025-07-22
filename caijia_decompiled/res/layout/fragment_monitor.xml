@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="horizontal" android:background="@drawable/shape_fragment_bg" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_margin="20.0px" android:baselineAligned="false"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="431.0">
+        <LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="639.0">
+            <RelativeLayout android:id="@id/rlVoc" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="198.0">
+                <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true">
+                    <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_voc_room_in" />
+                    <com.dnake.desktop.widget.ArofeneView1 android:id="@id/arofeneView1F" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20.0dip" app:levelTextSize="15" app:triangleWidth="9" app:viewLineHeight="8" app:viewLineWidth="150" />
+                </LinearLayout>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line" />
+            <RelativeLayout android:id="@id/rlCo2" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="198.0">
+                <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true">
+                    <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_co2_room_in" />
+                    <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="14.0dip">
+                        <TextView android:textSize="@dimen/medium_txt_size" android:textColor="#ff08ca08" android:layout_gravity="center" android:id="@id/tvCo2In" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" />
+                        <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_unit_ppm" android:layout_marginStart="20.0dip" />
+                    </LinearLayout>
+                </LinearLayout>
+            </RelativeLayout>
+        </LinearLayout>
+        <include layout="@layout/view_horizontal_line" />
+        <RelativeLayout android:id="@id/rlTemp" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="220.0">
+            <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true">
+                <ImageView android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_temp" />
+                <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="20.0dip">
+                    <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                        <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_room_in" />
+                        <TextView android:textSize="@dimen/medium_txt_size" android:textColor="#ff08ca08" android:layout_gravity="center" android:id="@id/tvTempIn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_marginStart="10.0dip" />
+                    </LinearLayout>
+                    <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20.0dip">
+                        <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_room_out" />
+                        <TextView android:textSize="@dimen/medium_txt_size" android:textColor="#ff08ca08" android:layout_gravity="center" android:id="@id/tvTempOut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_marginStart="10.0dip" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </RelativeLayout>
+    </LinearLayout>
+    <include layout="@layout/view_vertical_line" />
+    <LinearLayout android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="838.0">
+        <RelativeLayout android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="639.0">
+            <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:id="@id/tvDataType" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="17.0px" android:text="@string/str_temp" android:layout_marginStart="28.0px" />
+            <com.dnake.desktop.widget.LandleafView android:id="@id/myCustomLayout" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" app:cBoundSize="5" app:cLevelText="@string/str_level_shushi" app:cLevelTextSize="18" app:cLineWidth="17" app:cMaxText="36" app:cMinText="16" app:cProgressText="0.00" app:cProgressTextSize="56" app:cRadius="115" app:cRangeTextSize="11" />
+            <TextView android:textSize="15.0sp" android:textColor="@android:color/white" android:id="@id/tvUnit" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="10.0dip" android:text="@string/str_default_unit" android:layout_alignParentBottom="true" android:layout_marginEnd="17.0dip" android:layout_alignParentEnd="true" />
+        </RelativeLayout>
+        <include layout="@layout/view_horizontal_line" />
+        <LinearLayout android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="220.0">
+            <RelativeLayout android:id="@id/rlHumidity" android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="1.0">
+                <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true">
+                    <ImageView android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_humidity" />
+                    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="20.0dip">
+                        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                            <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_room_in" />
+                            <TextView android:textSize="@dimen/medium_txt_size" android:textColor="#ff08ca08" android:layout_gravity="center" android:id="@id/tvHumidityIn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_marginStart="10.0dip" />
+                        </LinearLayout>
+                        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20.0dip">
+                            <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_room_out" />
+                            <TextView android:textSize="@dimen/medium_txt_size" android:textColor="#ff08ca08" android:layout_gravity="center" android:id="@id/tvHumidityOut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_marginStart="10.0dip" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </RelativeLayout>
+            <include layout="@layout/view_vertical_line" />
+            <RelativeLayout android:id="@id/rlPm" android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="1.0">
+                <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true">
+                    <ImageView android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_pm25" />
+                    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="20.0dip">
+                        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                            <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_room_in" />
+                            <TextView android:textSize="@dimen/medium_txt_size" android:textColor="#ff08ca08" android:layout_gravity="center" android:id="@id/tvPmIn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_marginStart="10.0dip" />
+                        </LinearLayout>
+                        <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20.0dip">
+                            <TextView android:textSize="@dimen/medium_txt_size" android:textColor="@android:color/white" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_room_out" />
+                            <TextView android:textSize="@dimen/medium_txt_size" android:textColor="#ff08ca08" android:layout_gravity="center" android:id="@id/tvPmOut" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_marginStart="10.0dip" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </RelativeLayout>
+        </LinearLayout>
+    </LinearLayout>
+    <include layout="@layout/view_vertical_line" />
+    <LinearLayout android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="271.0">
+        <LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="639.0">
+            <RelativeLayout android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="240.0">
+                <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true">
+                    <ImageView android:layout_gravity="center" android:id="@id/ivWeatherStatus" android:layout_width="66.0px" android:layout_height="49.0px" android:src="@drawable/icon_duoyun" />
+                    <TextView android:textSize="13.0sp" android:textColor="@android:color/white" android:layout_gravity="center" android:id="@id/tvWeatherStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" />
+                    <TextView android:textSize="11.0sp" android:textColor="#ff92979a" android:layout_gravity="center" android:id="@id/tvUpdateTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10.0px" android:text="@string/str_loading" />
+                </LinearLayout>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line" />
+            <RelativeLayout android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="100.0" android:layout_marginStart="28.0px" android:layout_marginEnd="25.0px">
+                <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_calender" android:layout_centerVertical="true" />
+                <RelativeLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentStart="true">
+                    <TextView android:textSize="@dimen/txt_size_13" android:textColor="@android:color/white" android:id="@id/tvCalender" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_alignParentEnd="true" />
+                    <TextView android:textSize="@dimen/txt_size_11" android:textColor="#ff92979a" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10.0px" android:text="@string/str_calender" android:layout_below="@id/tvCalender" android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line" />
+            <RelativeLayout android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="100.0" android:layout_marginStart="28.0px" android:layout_marginEnd="25.0px">
+                <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_fengxiang" android:layout_centerVertical="true" />
+                <RelativeLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentEnd="true">
+                    <TextView android:textSize="@dimen/txt_size_13" android:textColor="@android:color/white" android:id="@id/tvWindDir" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_alignParentEnd="true" />
+                    <TextView android:textSize="@dimen/txt_size_11" android:textColor="#ff92979a" android:id="@id/tvWindLevel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10.0px" android:text="@string/str_loading" android:layout_below="@id/tvWindDir" android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line" />
+            <RelativeLayout android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="100.0" android:layout_marginStart="28.0px" android:layout_marginEnd="25.0px">
+                <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_yundong" android:layout_centerVertical="true" />
+                <RelativeLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentEnd="true">
+                    <TextView android:textSize="@dimen/txt_size_13" android:textColor="@android:color/white" android:id="@id/tvSport" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_alignParentEnd="true" />
+                    <TextView android:textSize="@dimen/txt_size_11" android:textColor="#ff92979a" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10.0px" android:text="@string/str_sport" android:layout_below="@id/tvSport" android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line" />
+            <RelativeLayout android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="100.0" android:layout_marginStart="28.0px" android:layout_marginEnd="25.0px">
+                <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_ziwai" android:layout_centerVertical="true" />
+                <RelativeLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentEnd="true">
+                    <TextView android:textSize="@dimen/txt_size_13" android:textColor="@android:color/white" android:id="@id/tvSunny" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_alignParentEnd="true" />
+                    <TextView android:textSize="@dimen/txt_size_11" android:textColor="#ff92979a" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10.0px" android:text="@string/str_ziwaixian" android:layout_below="@id/tvSunny" android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+            </RelativeLayout>
+        </LinearLayout>
+        <include layout="@layout/view_horizontal_line" />
+        <LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="220.0">
+            <RelativeLayout android:layout_width="wrap_content" android:layout_height="0.0dip" android:layout_weight="1.0" android:layout_marginStart="28.0px" android:layout_marginEnd="25.0px">
+                <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_chuanyi" android:layout_centerVertical="true" />
+                <RelativeLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentEnd="true">
+                    <TextView android:textSize="@dimen/txt_size_13" android:textColor="@android:color/white" android:id="@id/tvChuanyi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_alignParentEnd="true" />
+                    <TextView android:textSize="@dimen/txt_size_11" android:textColor="#ff92979a" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10.0px" android:text="@string/str_chuanyi" android:layout_below="@id/tvChuanyi" android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+            </RelativeLayout>
+            <include layout="@layout/view_horizontal_line" />
+            <RelativeLayout android:layout_width="wrap_content" android:layout_height="0.0dip" android:layout_weight="1.0" android:layout_marginStart="28.0px" android:layout_marginEnd="25.0px">
+                <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/icon_ganmao" android:layout_centerVertical="true" />
+                <RelativeLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentEnd="true">
+                    <TextView android:textSize="@dimen/txt_size_13" android:textColor="@android:color/white" android:id="@id/tvGanmao" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/str_loading" android:layout_alignParentEnd="true" />
+                    <TextView android:textSize="@dimen/txt_size_11" android:textColor="#ff92979a" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10.0px" android:text="@string/str_ganmao" android:layout_below="@id/tvGanmao" android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+            </RelativeLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
