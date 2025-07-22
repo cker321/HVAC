@@ -52,7 +52,7 @@
 31        android:allowBackup="true"
 31-->/Users/zhurui/WebstormProjects/apk/apk-api-service/app/src/main/AndroidManifest.xml:25:9-35
 32        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-32-->[androidx.core:core:1.5.0] /Users/zhurui/.gradle/caches/transforms-3/6de527c4705dfc6449b62eed8fd9ccd5/transformed/core-1.5.0/AndroidManifest.xml:24:18-86
+32-->[androidx.core:core:1.5.0] /Users/zhurui/.gradle/caches/transforms-3/235d714df237c144b5184b5244417e57/transformed/core-1.5.0/AndroidManifest.xml:24:18-86
 33        android:debuggable="true"
 34        android:icon="@mipmap/ic_launcher"
 34-->/Users/zhurui/WebstormProjects/apk/apk-api-service/app/src/main/AndroidManifest.xml:26:9-43

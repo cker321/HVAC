@@ -74,8 +74,11 @@ public class AirControlFragment extends BaseFragment {
     private final int TYPE_T2 = 0;
     private final int TYPE_T4_1 = 1;
     private final int TYPE_T4_2 = 2;
+    // T2户型空调房间名称
     String[] roomArrayT2 = {Constant.ROOM_KETING, "餐厅", "卧室1", "卧室2", "主卧"};
+    // T4-1户型空调房间名称
     String[] roomArrayT4_1 = {Constant.ROOM_KETING, "卧室1", "卧室2", "主卧", "卧室3"};
+    // T4-2户型空调房间名称
     String[] roomArrayT4_2 = {Constant.ROOM_KETING, "卧室1", "卧室2", "主卧"};
     int minTemp = 16;
     int maxTemp = 30;
