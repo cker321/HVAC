@@ -6,4 +6,61 @@
     <string name="start_service">启动服务</string>
     <string name="stop_service">停止服务</string>
     <string name="refresh_status">刷新设备状态</string>
+    
+    <!-- 房间选择相关 -->
+    <string name="room_selection_title">房间选择</string>
+    <string name="please_select_room">请选择房间</string>
+    <string name="current_selection">当前选择：</string>
+    
+    <!-- 空调控制相关 -->
+    <string name="ac_control_title">空调控制</string>
+    <string name="temperature">温度：</string>
+    <string name="fan_speed">风速：</string>
+    <string name="ac_mode">模式：</string>
+    <string name="fan_low">低</string>
+    <string name="fan_medium">中</string>
+    <string name="fan_high">高</string>
+    <string name="apply_settings">应用设置</string>
+    <string name="power_on">开机</string>
+    <string name="power_off">关机</string>
+    
+    <!-- 房间类型 -->
+    <string-array name="t2_rooms">
+        <item>客厅</item>
+        <item>餐厅</item>
+        <item>卧室1</item>
+        <item>卧室2</item>
+        <item>主卧</item>
+    </string-array>
+    
+    <string-array name="t4_1_rooms">
+        <item>客厅</item>
+        <item>卧室1</item>
+        <item>卧室2</item>
+        <item>主卧</item>
+        <item>卧室3</item>
+    </string-array>
+    
+    <string-array name="t4_2_rooms">
+        <item>客厅</item>
+        <item>卧室1</item>
+        <item>卧室2</item>
+        <item>主卧</item>
+    </string-array>
+    
+    <!-- 房间类型选项 -->
+    <string-array name="room_types">
+        <item>T2户型</item>
+        <item>T4-1户型</item>
+        <item>T4-2户型</item>
+    </string-array>
+
+    <!-- 空调模式 -->
+    <string-array name="ac_modes">
+        <item>制冷</item>
+        <item>制热</item>
+        <item>除湿</item>
+        <item>送风</item>
+        <item>自动</item>
+    </string-array>
 </resources>

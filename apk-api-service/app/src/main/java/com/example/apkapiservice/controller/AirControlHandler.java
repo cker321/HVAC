@@ -314,60 +314,116 @@ public class AirControlHandler {
         // 根据命令类型设置对应的寄存器值
         switch (cmdType) {
             case CMD_POWER:
-                if (value == 1) {  // 电源开启
-                    // 根据真正成功的报文: 00 01 00 18 00 03 00 80 00 00 00 01 00 00 00 00 00 00
-                    // 寄存器索引:                [0] [1] [2] [3] [4] [5] [6] [7] [8]
-                    registerValues[0] = 0x0001; // 模式或状态标志
-                    registerValues[1] = 0x0018; // 温度设置（24度，0x18=24）
-                    registerValues[2] = 0x0003; // 风速设置
-                    registerValues[3] = 0x0080; // 电源控制位（0x80=128）
-                    registerValues[4] = 0x0000; // 保留
-                    registerValues[5] = 0x0001; // 另一个控制位
-                    registerValues[6] = 0x0000; // 保留
-                    registerValues[7] = 0x0000; // 保留
-                    registerValues[8] = 0x0000; // 保留
-                    Log.e(TAG, "设置电源开启: 模式=0x01, 温度=24度, 风速=3, 电源=0x80, 控制位=0x01");
+                // 电源控制：先读取设备当前状态，使用当前的模式、温度、风速设置
+                TicaInnerStatus currentStatus = readInnerStatus();
+                int currentMode = 0x0001;    // 默认模式
+                int currentTemp = 0x0018;    // 默认温度 24度
+                int currentSpeed = 0x0003;   // 默认风速 3
+                
+                if (currentStatus != null) {
+                    // 使用设备当前状态
+                    currentMode = currentStatus.getSettingMode();
+                    currentTemp = currentStatus.getSettingTemp();
+                    currentSpeed = currentStatus.getSettingWindSpeed();
+                    Log.e(TAG, "读取到设备当前状态: 模式=" + currentMode + ", 温度=" + currentTemp + ", 风速=" + currentSpeed);
                 } else {
-                    // 电源关闭：保持基本设置，只关闭电源控制位
-                    // 方案1：保持模式、温度、风速设置，只关闭电源位
-                    registerValues[0] = 0x0001; // 保持模式标志
-                    registerValues[1] = 0x0018; // 保持温度设置（24度）
-                    registerValues[2] = 0x0003; // 保持风速设置
-                    registerValues[3] = 0x0000; // 关闭电源控制位（从0x80改为0x00）
+                    Log.e(TAG, "无法读取设备当前状态，使用默认值");
+                }
+                
+                if (value == 1) {  // 电源开启
+                    // 使用设备当前状态或默认值
+                    registerValues[0] = currentMode;  // 使用当前模式
+                    registerValues[1] = currentTemp;  // 使用当前温度
+                    registerValues[2] = currentSpeed; // 使用当前风速
+                    registerValues[3] = 0x0080; // 电源控制位（开启）
                     registerValues[4] = 0x0000; // 保留
-                    registerValues[5] = 0x0001; // 关闭另一个控制位（从0x01改为0x00）
+                    registerValues[5] = 0x0001; // 控制位（开启时设置）
                     registerValues[6] = 0x0000; // 保留
                     registerValues[7] = 0x0000; // 保留
                     registerValues[8] = 0x0000; // 保留
-                    Log.e(TAG, "设置电源关闭: 保持设置，只关闭电源位(0x80->0x00)和控制位(0x01->0x00)");
+                    Log.e(TAG, "设置电源开启: 模式=0x" + Integer.toHexString(currentMode) + 
+                            ", 温度=" + currentTemp + "度, 风速=" + currentSpeed + ", 电源=0x80");
+                } else {
+                    // 电源关闭：根据真实关机报文结构
+                    // 关机报文: 00 01 00 18 00 03 00 00 00 00 00 01 00 00 00 00 00 00
+                    registerValues[0] = currentMode;  // 保持当前模式
+                    registerValues[1] = currentTemp;  // 保持当前温度
+                    registerValues[2] = currentSpeed; // 保持当前风速
+                    registerValues[3] = 0x0000; // 关闭电源控制位
+                    registerValues[4] = 0x0000; // 保留
+                    registerValues[5] = 0x0001; // 关机时的控制位（根据真实报文）
+                    registerValues[6] = 0x0000; // 保留
+                    registerValues[7] = 0x0000; // 保留
+                    registerValues[8] = 0x0000; // 保留
+                    Log.e(TAG, "设置电源关闭: 模式=0x" + Integer.toHexString(currentMode) + 
+                            ", 温度=" + currentTemp + "度, 风速=" + currentSpeed + ", 电源=0x00");
                 }
                 break;
             case CMD_MODE:
-                // 保持基本结构，但确保其他必要位也设置
-                registerValues[0] = value; // 模式控制
-                registerValues[1] = 0x0018; // 默认温度24度
-                registerValues[2] = 0x0003; // 默认风速3
-                registerValues[3] = 0x0080; // 保持电源开启
-                registerValues[5] = 0x0001; // 保持控制位
-                Log.e(TAG, "设置模式: " + value + "，保持其他必要控制位");
+                // 模式控制：先读取设备当前状态，保持温度和风速设置
+                TicaInnerStatus modeStatus = readInnerStatus();
+                int keepTemp = 0x0018;    // 默认温度
+                int keepSpeed = 0x0003;   // 默认风速
+                
+                if (modeStatus != null) {
+                    keepTemp = modeStatus.getSettingTemp();
+                    keepSpeed = modeStatus.getSettingWindSpeed();
+                }
+                
+                registerValues[0] = value;    // 设置新模式
+                registerValues[1] = keepTemp; // 保持当前温度
+                registerValues[2] = keepSpeed;// 保持当前风速
+                registerValues[3] = 0x0080;  // 保持电源开启
+                registerValues[4] = 0x0000;  // 保留
+                registerValues[5] = 0x0001;  // 控制位
+                registerValues[6] = 0x0000;  // 保留
+                registerValues[7] = 0x0000;  // 保留
+                registerValues[8] = 0x0000;  // 保留
+                Log.e(TAG, "设置模式: " + value + "，保持温度=" + keepTemp + "、风速=" + keepSpeed);
                 break;
             case CMD_TEMP:
-                // 温度控制，保持其他必要位
-                registerValues[0] = 0x0001; // 保持模式
-                registerValues[1] = value; // 温度设置
-                registerValues[2] = 0x0003; // 保持风速
-                registerValues[3] = 0x0080; // 保持电源开启
-                registerValues[5] = 0x0001; // 保持控制位
-                Log.e(TAG, "设置温度: " + value + "度，保持其他必要控制位");
+                // 温度控制：先读取设备当前状态，保持模式和风速设置
+                TicaInnerStatus tempStatus = readInnerStatus();
+                int keepMode = 0x0001;    // 默认模式
+                int keepSpeed2 = 0x0003;  // 默认风速
+                
+                if (tempStatus != null) {
+                    keepMode = tempStatus.getSettingMode();
+                    keepSpeed2 = tempStatus.getSettingWindSpeed();
+                }
+                
+                registerValues[0] = keepMode; // 保持当前模式
+                registerValues[1] = value;    // 设置新温度
+                registerValues[2] = keepSpeed2;// 保持当前风速
+                registerValues[3] = 0x0080;  // 保持电源开启
+                registerValues[4] = 0x0000;  // 保留
+                registerValues[5] = 0x0001;  // 控制位
+                registerValues[6] = 0x0000;  // 保留
+                registerValues[7] = 0x0000;  // 保留
+                registerValues[8] = 0x0000;  // 保留
+                Log.e(TAG, "设置温度: " + value + "度，保持模式=" + keepMode + "、风速=" + keepSpeed2);
                 break;
             case CMD_SPEED:
-                // 风速控制，保持其他必要位
-                registerValues[0] = 0x0001; // 保持模式
-                registerValues[1] = 0x0018; // 保持温度24度
-                registerValues[2] = value; // 风速设置
-                registerValues[3] = 0x0080; // 保持电源开启
-                registerValues[5] = 0x0001; // 保持控制位
-                Log.e(TAG, "设置风速: " + value + "，保持其他必要控制位");
+                // 风速控制：先读取设备当前状态，保持模式和温度设置
+                TicaInnerStatus speedStatus = readInnerStatus();
+                int keepMode2 = 0x0001;   // 默认模式
+                int keepTemp2 = 0x0018;   // 默认温度
+                
+                if (speedStatus != null) {
+                    keepMode2 = speedStatus.getSettingMode();
+                    keepTemp2 = speedStatus.getSettingTemp();
+                }
+                
+                registerValues[0] = keepMode2; // 保持当前模式
+                registerValues[1] = keepTemp2; // 保持当前温度
+                registerValues[2] = value;     // 设置新风速
+                registerValues[3] = 0x0080;   // 保持电源开启
+                registerValues[4] = 0x0000;   // 保留
+                registerValues[5] = 0x0001;   // 控制位
+                registerValues[6] = 0x0000;   // 保留
+                registerValues[7] = 0x0000;   // 保留
+                registerValues[8] = 0x0000;   // 保留
+                Log.e(TAG, "设置风速: " + value + "，保持模式=" + keepMode2 + "、温度=" + keepTemp2);
                 break;
         }
         
@@ -470,118 +526,9 @@ public class AirControlHandler {
         }
     }
     
-    /**
-     * 尝试多种Modbus写入策略
-     *
-     * @param cmdType 命令类型
-     * @param value   命令值
-     * @param iPow    机器编号对应的电源位
-     * @return 是否写入成功
-     */
-    private boolean tryMultipleWriteStrategies(int cmdType, int value, int iPow) {
-        // 写入策略1：写入单个寄存器
-        byte[] writeBytes1 = writeStatusToBytes(this.ticaInnerStatus, iPow);
-        try {
-            byte[] response1 = Rs485Executor.getInstance().write(writeBytes1, 300);
-            if (Rs485Utils.getInstance().returnCheck(response1, writeBytes1)) {
-                Log.e(TAG, "写入策略1成功");
-                return true;
-            }
-        } catch (InterruptedException e) {
-            Log.e(TAG, "写入策略1失败", e);
-        }
-        
-        // 写入策略2：写入多个寄存器
-        byte[] writeBytes2 = writeStatusToBytesMultiRegister(this.ticaInnerStatus, iPow);
-        try {
-            byte[] response2 = Rs485Executor.getInstance().write(writeBytes2, 300);
-            if (Rs485Utils.getInstance().returnCheck(response2, writeBytes2)) {
-                Log.e(TAG, "写入策略2成功");
-                return true;
-            }
-        } catch (InterruptedException e) {
-            Log.e(TAG, "写入策略2失败", e);
-        }
-        
-        // 写入策略3：写入不同地址
-        byte[] writeBytes3 = writeStatusToBytesDifferentAddress(this.ticaInnerStatus, iPow);
-        try {
-            byte[] response3 = Rs485Executor.getInstance().write(writeBytes3, 300);
-            if (Rs485Utils.getInstance().returnCheck(response3, writeBytes3)) {
-                Log.e(TAG, "写入策略3成功");
-                return true;
-            }
-        } catch (InterruptedException e) {
-            Log.e(TAG, "写入策略3失败", e);
-        }
-        
-        // 写入策略4：使用单寄存器写入（功能码06）
-        byte[] writeBytes4 = writeSingleRegister(cmdType, value);
-        try {
-            byte[] response4 = Rs485Executor.getInstance().write(writeBytes4, 300);
-            if (Rs485Utils.getInstance().returnCheck(response4, writeBytes4)) {
-                Log.e(TAG, "写入策略4成功（单寄存器写入）");
-                return true;
-            }
-        } catch (InterruptedException e) {
-            Log.e(TAG, "写入策略4失败", e);
-        }
-        
-        // 写入策略5：尝试更多不同地址
-        byte[] writeBytes5 = tryMoreAddresses(this.ticaInnerStatus, iPow);
-        try {
-            byte[] response5 = Rs485Executor.getInstance().write(writeBytes5, 300);
-            if (Rs485Utils.getInstance().returnCheck(response5, writeBytes5)) {
-                Log.e(TAG, "写入策略5成功（更多地址尝试）");
-                return true;
-            }
-        } catch (InterruptedException e) {
-            Log.e(TAG, "写入策略5失败", e);
-        }
-        
-        // 写入策略6：系统性尝试多个地址的单寄存器写入
-        boolean success6 = tryMultipleSingleRegisterAddresses(cmdType, value);
-        if (success6) {
-            Log.e(TAG, "写入策略6成功（多地址单寄存器尝试）");
-            return true;
-        }
-        
-        return false;
-    }
+
     
-    /**
-     * 将状态对象转换为写入字节数组（单个寄存器）
-     */
-    private byte[] writeStatusToBytes(TicaInnerStatus status, int powerBit) {
-        int[] values = new int[9];
-        
-        // 设置模式
-        values[0] = status.getSettingMode();
-        
-        // 设置温度
-        values[1] = status.getSettingTemp();
-        
-        // 设置风速
-        values[2] = status.getSettingWindSpeed();
-        
-        // 设置电源状态
-        values[3] = status.isPowerSetting() ? powerBit : 0;
-        
-        // 其他参数保持默认值
-        values[4] = 0;
-        values[5] = 0;
-        values[6] = 0;
-        values[7] = 0;
-        values[8] = 0;
-        
-        // 生成写入命令
-        return Rs485Utils.getInstance().getWriteSendBytes(
-                AIR_ADDRESS,
-                WRITE_FUNCTION_CODE,
-                ((this.machineNo - 1) * 16) + INNER_START_ADDRESS,
-                values
-        );
-    }
+
     
     /**
      * 将接收到的数据转换为空调状态对象
@@ -698,75 +645,7 @@ public class AirControlHandler {
         return sendCommand(CMD_POWER, power == 0 ? POWER_OFF : POWER_ON);
     }
     
-    /**
-     * 将状态对象转换为写入16个寄存器的字节数组（策略2）
-     */
-    private byte[] writeStatusToBytesMultiRegister(TicaInnerStatus status, int powerBit) {
-        Log.e(TAG, "尝试策略2：写入16个寄存器");
-        int[] values = new int[16]; // 与读取数量一致
-        
-        // 设置模式
-        values[0] = status.getSettingMode();
-        
-        // 设置温度
-        values[1] = status.getSettingTemp();
-        
-        // 设置风速
-        values[2] = status.getSettingWindSpeed();
-        
-        // 设置电源状态
-        values[3] = status.isPowerSetting() ? powerBit : 0;
-        
-        // 其他参数保持默认值
-        for (int i = 4; i < 16; i++) {
-            values[i] = 0;
-        }
-        
-        // 生成写入命令
-        return Rs485Utils.getInstance().getWriteSendBytes(
-                AIR_ADDRESS,
-                WRITE_FUNCTION_CODE,
-                ((this.machineNo - 1) * 16) + INNER_START_ADDRESS,
-                values
-        );
-    }
-    
-    /**
-     * 将状态对象转换为不同地址的写入字节数组（策略3）
-     */
-    private byte[] writeStatusToBytesDifferentAddress(TicaInnerStatus status, int powerBit) {
-        Log.e(TAG, "尝试策略3：使用不同的地址");
-        int[] values = new int[9];
-        
-        // 设置模式
-        values[0] = status.getSettingMode();
-        
-        // 设置温度
-        values[1] = status.getSettingTemp();
-        
-        // 设置风速
-        values[2] = status.getSettingWindSpeed();
-        
-        // 设置电源状态
-        values[3] = status.isPowerSetting() ? powerBit : 0;
-        
-        // 其他参数保持默认值
-        for (int i = 4; i < 9; i++) {
-            values[i] = 0;
-        }
-        
-        // 尝试不同的地址：原地址-16 (128 = 0x0080)
-        int alternativeAddress = ((this.machineNo - 1) * 16) + INNER_START_ADDRESS - 16;
-        Log.e(TAG, "尝试地址: 0x" + String.format("%04X", alternativeAddress));
-        
-        // 生成写入命令
-        return Rs485Utils.getInstance().getWriteSendBytes(
-                AIR_ADDRESS,
-                WRITE_FUNCTION_CODE,
-                alternativeAddress,
-                values
-        );
-    }
+
     
     /**
      * 使用单寄存器写入（功能码06）（策略4）
@@ -828,53 +707,7 @@ public class AirControlHandler {
         );
     }
     
-    /**
-     * 尝试更多不同地址（策略5）
-     */
-    private byte[] tryMoreAddresses(TicaInnerStatus status, int powerBit) {
-        Log.e(TAG, "尝试策略5：尝试更多不同地址");
-        
-        // 尝试地址列表
-        int[] addressesToTry = {
-            96,   // 0x0060
-            112,  // 0x0070
-            160,  // 0x00A0
-            176,  // 0x00B0
-            192,  // 0x00C0
-            128   // 0x0080 (再次尝试)
-        };
-        
-        // 选择第一个地址进行尝试
-        int tryAddress = addressesToTry[0]; // 先尝试 0x0060
-        Log.e(TAG, "尝试新地址: 0x" + String.format("%04X", tryAddress));
-        
-        int[] values = new int[9];
-        
-        // 设置模式
-        values[0] = status.getSettingMode();
-        
-        // 设置温度
-        values[1] = status.getSettingTemp();
-        
-        // 设置风速
-        values[2] = status.getSettingWindSpeed();
-        
-        // 设置电源状态
-        values[3] = status.isPowerSetting() ? powerBit : 0;
-        
-        // 其他参数保持默认值
-        for (int i = 4; i < 9; i++) {
-            values[i] = 0;
-        }
-        
-        // 生成写入命令
-        return Rs485Utils.getInstance().getWriteSendBytes(
-                AIR_ADDRESS,
-                WRITE_FUNCTION_CODE,
-                tryAddress,
-                values
-        );
-    }
+
     
     /**
      * 系统性尝试多个地址的单寄存器写入（策略6）
