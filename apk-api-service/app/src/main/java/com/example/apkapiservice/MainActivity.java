@@ -8,9 +8,12 @@ import android.os.Looper;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -69,6 +72,29 @@ public class MainActivity extends AppCompatActivity {
     private Button btnTestRoomInit;
     private Button btnTestRoomStatus;
     
+    // 房间选择相关
+    private Spinner spinnerRoomSelection;
+    private Spinner spinnerRoomTypeSelection;
+    private TextView tvSelectedRoom;
+    private String[] currentRooms;
+    private String selectedRoom = "";
+    
+    // 空调控制相关
+    private Button btnTempMinus;
+    private Button btnTempPlus;
+    private TextView tvTemperature;
+    private RadioGroup rgFanSpeed;
+    private RadioButton rbFanLow;
+    private RadioButton rbFanMedium;
+    private RadioButton rbFanHigh;
+    private Spinner spinnerAcMode;
+    private Button btnApplyAcSettings;
+    
+    // 空调控制参数
+    private int currentTemperature = 24;
+    private int currentFanSpeed = 2; // 1=低, 2=中, 3=高
+    private int currentAcMode = 0; // 0=制冷, 1=制热, 2=除湿, 3=送风, 4=自动
+    
     private String deviceIpAddress = "";
     private final int API_PORT = 8080;
     
@@ -105,10 +131,10 @@ public class MainActivity extends AppCompatActivity {
         btnApplyHouseType = findViewById(R.id.btn_apply_house_type);
         
         // 初始化房间类型选择
-        rgHouseType = findViewById(R.id.rg_house_type);
-        rbHouseT2 = findViewById(R.id.rb_house_t2);
-        rbHouseT41 = findViewById(R.id.rb_house_t4_1);
-        rbHouseT42 = findViewById(R.id.rb_house_t4_2);
+        // rgHouseType = findViewById(R.id.rg_house_type);
+        // rbHouseT2 = findViewById(R.id.rb_house_t2);
+        // rbHouseT41 = findViewById(R.id.rb_house_t4_1);
+        // rbHouseT42 = findViewById(R.id.rb_house_t4_2);
         
         // 初始化API测试按钮
         btnTestAirStatus = findViewById(R.id.btn_test_air_status);
@@ -121,6 +147,28 @@ public class MainActivity extends AppCompatActivity {
         // 添加房间API测试按钮
         btnTestRoomInit = findViewById(R.id.btn_test_room_init);
         btnTestRoomStatus = findViewById(R.id.btn_test_room_status);
+        
+        // 初始化房间选择相关控件  
+        spinnerRoomTypeSelection = findViewById(R.id.spinner_room_type_selection);
+        spinnerRoomSelection = findViewById(R.id.spinner_room_selection);
+        tvSelectedRoom = findViewById(R.id.tv_selected_room);
+        
+        // 初始化空调控制相关控件
+        btnTempMinus = findViewById(R.id.btn_temp_minus);
+        btnTempPlus = findViewById(R.id.btn_temp_plus);
+        tvTemperature = findViewById(R.id.tv_temperature);
+        rgFanSpeed = findViewById(R.id.rg_fan_speed);
+        rbFanLow = findViewById(R.id.rb_fan_low);
+        rbFanMedium = findViewById(R.id.rb_fan_medium);
+        rbFanHigh = findViewById(R.id.rb_fan_high);
+        spinnerAcMode = findViewById(R.id.spinner_ac_mode);
+        btnApplyAcSettings = findViewById(R.id.btn_apply_ac_settings);
+        
+        // 初始化空调模式下拉框
+        setupAcModeSpinner();
+        
+        // 初始化温度显示
+        updateTemperatureDisplay();
         
         // 获取设备IP地址并更新显示
         deviceIpAddress = getLocalIpAddress();
@@ -230,6 +278,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+        
+        // 设置房间类型选择监听器
+        setupRoomTypeSelectionListener();
+    
+        // 设置房间选择监听器
+        setupRoomSelectionListener();
+        
+        // 设置空调控制监听器
+        setupAirControlListeners();
     }
     
     /**
@@ -384,6 +441,221 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
+     * 设置空调模式下拉框
+     */
+    private void setupAcModeSpinner() {
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.ac_modes, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAcMode.setAdapter(adapter);
+        
+        spinnerAcMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                currentAcMode = position;
+            }
+            
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // 不做处理
+            }
+        });
+    }
+    
+    /**
+     * 设置房间类型选择监听器
+     */
+    private void setupRoomTypeSelectionListener() {
+        spinnerRoomTypeSelection.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedType = parent.getItemAtPosition(position).toString();
+                String houseType;
+                
+                // 从显示文本中提取户型代码
+                if (selectedType.contains("T2")) {
+                    houseType = "T2";
+                } else if (selectedType.contains("T4-1")) {
+                    houseType = "T4-1";
+                } else if (selectedType.contains("T4-2")) {
+                    houseType = "T4-2";
+                } else {
+                    houseType = "T4-1"; // 默认
+                }
+                
+                // 更新房间选择下拉框
+                updateRoomSelection(houseType);
+                
+                // 记录日志
+                Log.d(TAG, "房间类型已选择: " + selectedType + ", 户型代码: " + houseType);
+            }
+            
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // 默认使用T4-1户型
+                updateRoomSelection("T4-1");
+            }
+        });
+    }
+    
+    /**
+     * 设置房间选择监听器
+     */
+    private void setupRoomSelectionListener() {
+        spinnerRoomSelection.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (currentRooms != null && position < currentRooms.length) {
+                    selectedRoom = currentRooms[position];
+                    tvSelectedRoom.setText("当前选择：" + selectedRoom);
+                }
+            }
+            
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedRoom = "";
+                tvSelectedRoom.setText("当前选择：请选择房间");
+            }
+        });
+    }
+    
+    /**
+     * 设置空调控制监听器
+     */
+    private void setupAirControlListeners() {
+        // 温度减少按钮
+        btnTempMinus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentTemperature > 16) {
+                    currentTemperature--;
+                    updateTemperatureDisplay();
+                }
+            }
+        });
+        
+        // 温度增加按钮
+        btnTempPlus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentTemperature < 30) {
+                    currentTemperature++;
+                    updateTemperatureDisplay();
+                }
+            }
+        });
+        
+        // 风速选择监听器
+        rgFanSpeed.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.rb_fan_low) {
+                    currentFanSpeed = 1;
+                } else if (checkedId == R.id.rb_fan_medium) {
+                    currentFanSpeed = 2;
+                } else if (checkedId == R.id.rb_fan_high) {
+                    currentFanSpeed = 3;
+                }
+            }
+        });
+        
+        // 应用设置按钮
+        btnApplyAcSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                applyAirConditionerSettings();
+            }
+        });
+    }
+    
+    /**
+     * 更新温度显示
+     */
+    private void updateTemperatureDisplay() {
+        tvTemperature.setText(currentTemperature + "°C");
+    }
+    
+    /**
+     * 更新房间选择下拉框
+     */
+    private void updateRoomSelection(String houseType) {
+        int arrayResId;
+        switch (houseType) {
+            case "T2":
+                arrayResId = R.array.t2_rooms;
+                break;
+            case "T4-1":
+                arrayResId = R.array.t4_1_rooms;
+                break;
+            case "T4-2":
+                arrayResId = R.array.t4_2_rooms;
+                break;
+            default:
+                arrayResId = R.array.t4_1_rooms; // 默认使用T4-1
+                break;
+        }
+        Log.e(TAG, "updateRoomSelection arrayResId: " + arrayResId);
+        currentRooms = getResources().getStringArray(arrayResId);
+        Log.e(TAG, "updateRoomSelection currentRooms: " + currentRooms);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, currentRooms);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerRoomSelection.setAdapter(adapter);
+        
+        // 重置选择
+        selectedRoom = "";
+        tvSelectedRoom.setText("当前选择：请选择房间");
+    }
+    
+    /**
+     * 应用空调设置
+     */
+    private void applyAirConditionerSettings() {
+        if (selectedRoom.isEmpty()) {
+            Toast.makeText(this, "请先选择房间", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // 构建API请求参数
+        StringBuilder apiUrl = new StringBuilder("/api/air/control");
+        apiUrl.append("?room=").append(selectedRoom);
+        apiUrl.append("&temp=").append(currentTemperature);
+        apiUrl.append("&speed=").append(currentFanSpeed);
+        apiUrl.append("&mode=").append(currentAcMode);
+        
+        // 发送API请求
+        testApiRequest(apiUrl.toString(), "GET");
+        
+        Toast.makeText(this, "正在应用空调设置：" + selectedRoom + 
+                ", 温度:" + currentTemperature + "°C" +
+                ", 风速:" + getFanSpeedText(currentFanSpeed) +
+                ", 模式:" + getAcModeText(currentAcMode), Toast.LENGTH_LONG).show();
+    }
+    
+    /**
+     * 获取风速文本
+     */
+    private String getFanSpeedText(int speed) {
+        switch (speed) {
+            case 1: return "低";
+            case 2: return "中";
+            case 3: return "高";
+            default: return "未知";
+        }
+    }
+    
+    /**
+     * 获取空调模式文本
+     */
+    private String getAcModeText(int mode) {
+        String[] modes = getResources().getStringArray(R.array.ac_modes);
+        if (mode >= 0 && mode < modes.length) {
+            return modes[mode];
+        }
+        return "未知";
+    }
+    
+    /**
      * 应用户型设置
      */
     private void applyHouseType() {
@@ -401,6 +673,10 @@ public class MainActivity extends AppCompatActivity {
         
         final String finalHouseType = houseType;
         Log.d(TAG, "设置户型类型: applyHouseType finalHouseType: " + finalHouseType);
+        
+        // 更新房间选择下拉框
+        updateRoomSelection(finalHouseType);
+        
         testApiRequest("/api/house/type", "POST", "{\"houseType\":\"" + finalHouseType + "\"}");
     }
     
