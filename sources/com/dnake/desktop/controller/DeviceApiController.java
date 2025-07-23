@@ -30,14 +30,19 @@ public class DeviceApiController {
     @GetMapping("/air/status")
     public void getAirStatus(HttpResponse response) {
         try {
+            Log.e(TAG, "开始获取空调状态");
+            
             // 创建响应数据
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("code", 200);
             jsonObject.put("message", "success");
+            Log.e(TAG, "基础JSON对象创建成功");
             
             // 创建空调状态数据
             JSONObject data = new JSONObject();
             TicaInnerStatus status = new TicaInnerStatus();
+            Log.e(TAG, "TicaInnerStatus对象创建成功");
+            
             // 这里应该从实际设备获取状态，这里只是示例
             status.setMachineNo(1);
             status.setRoomName("客厅");
@@ -46,19 +51,37 @@ public class DeviceApiController {
             status.setModeRun(1);  // 1表示制冷模式
             status.setWindSpeedStatus(2);  // 2表示中速
             status.setPowerSetting(true);  // 开机状态
+            Log.e(TAG, "TicaInnerStatus属性设置完成");
             
-            // 将状态转换为JSON
+            // 将状态转换为JSON - 逐个添加以定位问题
+            Log.e(TAG, "开始转换为JSON");
             data.put("machineNo", status.getMachineNo());
+            Log.e(TAG, "machineNo添加成功: " + status.getMachineNo());
+            
             data.put("roomName", status.getRoomName());
+            Log.e(TAG, "roomName添加成功: " + status.getRoomName());
+            
             data.put("temperature", status.getReturnAirTemperature());
+            Log.e(TAG, "temperature添加成功: " + status.getReturnAirTemperature());
+            
             data.put("mode", status.getModeRun());
+            Log.e(TAG, "mode添加成功: " + status.getModeRun());
+            
             data.put("windSpeed", status.getWindSpeedStatus());
+            Log.e(TAG, "windSpeed添加成功: " + status.getWindSpeedStatus());
+            
             data.put("power", status.isPowerSetting() ? 1 : 0);
+            Log.e(TAG, "power添加成功: " + (status.isPowerSetting() ? 1 : 0));
             
             jsonObject.put("data", data);
+            Log.e(TAG, "完整JSON对象创建成功");
+            
             response.setBody(new JsonBody(jsonObject.toString()));
+            Log.e(TAG, "响应设置成功");
         } catch (JSONException e) {
             Log.e(TAG, "获取空调状态失败", e);
+            Log.e(TAG, "异常详细信息: " + e.getMessage());
+            Log.e(TAG, "异常堆栈: ", e);
             try {
                 JSONObject error = new JSONObject();
                 error.put("code", 500);

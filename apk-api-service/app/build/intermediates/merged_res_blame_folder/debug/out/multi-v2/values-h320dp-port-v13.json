@@ -4,7 +4,7 @@
             "outputFile": "/Users/zhurui/WebstormProjects/apk/apk-api-service/app/build/intermediates/incremental/mergeDebugResources/merged.dir/values-h320dp-port-v13/values-h320dp-port-v13.xml",
             "map": [
                 {
-                    "source": "/Users/zhurui/.gradle/caches/transforms-3/71de35e86c45a332199eb23f9129d32f/transformed/material-1.4.0/res/values-h320dp-port-v13/values-h320dp-port-v13.xml",
+                    "source": "/Users/zhurui/.gradle/caches/transforms-3/a74e7d3097e9f19505317c0bb9b52a3d/transformed/material-1.4.0/res/values-h320dp-port-v13/values-h320dp-port-v13.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

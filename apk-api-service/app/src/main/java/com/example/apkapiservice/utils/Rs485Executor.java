@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -24,6 +25,15 @@ public class Rs485Executor {
     private InputStream inputStream;
     private OutputStream outputStream;
     private final Lock lock = new ReentrantLock();
+    
+    // 通信模式
+    private enum CommunicationMode {
+        DIRECT_SERIAL,  // 直接串口通信
+        UDP_SOCKET      // UDP Socket通信
+    }
+    
+    private CommunicationMode currentMode = CommunicationMode.DIRECT_SERIAL;
+    private UdpSerialAdapter udpAdapter;
     
     // 串口路径
     private static final String SERIAL_PORT_PATH = "/dev/ttyS1";
@@ -41,9 +51,39 @@ public class Rs485Executor {
     private static final String BLUETOOTH_GROUP = "net_bt_stack";  // 蓝牙组名称
     private static final String BLUETOOTH_USER = "bluetooth";     // 蓝牙用户名称
     
+    // 当前使用的串口路径
+    private String currentPath = SERIAL_PORT_PATH;
+    
+    /**
+     * 私有构造函数，初始化串口通信
+     */
     private Rs485Executor() {
         try {
             Log.d(TAG, "开始初始化串口执行器");
+            
+            // 先尝试UDP通信方式
+            try {
+                udpAdapter = new UdpSerialAdapter();
+                udpAdapter.start();
+                
+                // 设置串口参数
+                udpAdapter.setup(0, BAUD_RATE); // 0表示无校验
+                
+                // 获取输入输出流
+                inputStream = udpAdapter.getInputStream();
+                outputStream = udpAdapter.getOutputStream();
+                
+                if (inputStream != null && outputStream != null) {
+                    Log.d(TAG, "UDP串口适配器初始化成功，使用UDP Socket通信模式");
+                    currentMode = CommunicationMode.UDP_SOCKET;
+                    return;
+                } else {
+                    Log.w(TAG, "UDP串口适配器初始化失败，尝试直接串口通信模式");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "UDP串口适配器初始化异常: " + e.getMessage());
+                Log.w(TAG, "尝试直接串口通信模式");
+            }
             
             // 检查应用是否有root权限
             boolean hasRootAccess = false;
@@ -60,7 +100,7 @@ public class Rs485Executor {
             // 先尝试默认串口路径
             File portFile = new File(SERIAL_PORT_PATH);
             boolean portFound = false;
-            String currentPath = SERIAL_PORT_PATH;
+            currentPath = SERIAL_PORT_PATH;
             
             // 检查所有串口路径并记录状态
             Log.d(TAG, "检查所有可能的串口路径");
@@ -74,36 +114,34 @@ public class Rs485Executor {
                 Log.e(TAG, "默认串口文件不存在: " + SERIAL_PORT_PATH + ", 尝试备用串口");
                 
                 // 尝试备用串口路径
-                for (String backupPath : BACKUP_SERIAL_PATHS) {
-                    File backupFile = new File(backupPath);
-                    if (backupFile.exists()) {
-                        Log.i(TAG, "找到可用的备用串口: " + backupPath);
-                        portFile = backupFile;
-                        currentPath = backupPath;
+                for (String path : BACKUP_SERIAL_PATHS) {
+                    File file = new File(path);
+                    if (file.exists()) {
+                        portFile = file;
+                        currentPath = path;
                         portFound = true;
+                        Log.i(TAG, "找到可用串口: " + path);
                         break;
                     }
                 }
                 
                 if (!portFound) {
-                    Log.e(TAG, "所有串口路径均不可用");
+                    Log.e(TAG, "所有串口路径均不可用，无法初始化串口通信");
                     return;
                 }
-            } else {
-                portFound = true;
             }
             
             // 记录串口文件的权限信息
-            Log.i(TAG, "串口文件权限检查: " + SERIAL_PORT_PATH);
+            Log.i(TAG, "串口文件权限检查: " + currentPath);
             Log.i(TAG, "当前应用权限: " + (portFile.canRead() ? "r" : "-") + (portFile.canWrite() ? "w" : "-"));
             
             try {
                 // 记录当前文件权限信息
-                Process process = Runtime.getRuntime().exec("ls -l " + SERIAL_PORT_PATH);
+                Process process = Runtime.getRuntime().exec("ls -l " + currentPath);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    Log.i(TAG, "串口文件信息: " + line);
+                    Log.i(TAG, "串口文件权限: " + line);
                 }
                 reader.close();
             } catch (Exception e) {
@@ -114,34 +152,33 @@ public class Rs485Executor {
             if (!portFile.canRead() || !portFile.canWrite()) {
                 try {
                     // 尝试多种方式修改权限
-                    Log.i(TAG, "尝试修改串口文件权限: " + SERIAL_PORT_PATH);
+                    Log.i(TAG, "尝试修改串口文件权限: " + currentPath);
                     
                     // 方式1: 直接修改为666权限
-                    Process process = Runtime.getRuntime().exec("su -c chmod 666 " + SERIAL_PORT_PATH);
+                    Process process = Runtime.getRuntime().exec("chmod 666 " + currentPath);
                     process.waitFor();
                     Log.i(TAG, "尝试方式1完成");
                     
-                    // 方式2: 尝试添加当前用户到蓝牙组
-                    process = Runtime.getRuntime().exec("su -c chown " + BLUETOOTH_USER + ":" + BLUETOOTH_GROUP + " " + SERIAL_PORT_PATH);
+                    // 方式2: 使用su命令修改为666权限
+                    process = Runtime.getRuntime().exec("su -c chmod 666 " + currentPath);
                     process.waitFor();
                     Log.i(TAG, "尝试方式2完成");
                     
-                    // 方式3: 尝试修改组权限
-                    process = Runtime.getRuntime().exec("su -c chmod 660 " + SERIAL_PORT_PATH);
+                    // 方式3: 使用su命令修改为660权限
+                    process = Runtime.getRuntime().exec("su -c chmod 660 " + currentPath);
                     process.waitFor();
                     Log.i(TAG, "尝试方式3完成");
                     
                     // 再次检查权限
                     if (!portFile.canRead() || !portFile.canWrite()) {
-                        Log.e(TAG, "串口文件权限不足: " + SERIAL_PORT_PATH + ", 尝试修改权限失败");
-                        Log.e(TAG, "当前权限: " + (portFile.canRead() ? "r" : "-") + (portFile.canWrite() ? "w" : "-"));
+                        Log.e(TAG, "串口文件权限不足: " + currentPath + ", 尝试修改权限失败");
                         
-                        // 尝试获取当前文件权限信息
-                        process = Runtime.getRuntime().exec("ls -l " + SERIAL_PORT_PATH);
+                        // 记录当前文件权限信息
+                        process = Runtime.getRuntime().exec("ls -l " + currentPath);
                         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                         String line;
                         while ((line = reader.readLine()) != null) {
-                            Log.e(TAG, "串口文件信息: " + line);
+                            Log.e(TAG, "修改后串口文件权限: " + line);
                         }
                         reader.close();
                     } else {
@@ -164,14 +201,13 @@ public class Rs485Executor {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        Log.d(TAG, "当前进程信息: " + line);
+                        Log.i(TAG, "当前进程权限: " + line);
                     }
                     reader.close();
                 } catch (Exception e) {
-                    Log.e(TAG, "无法获取进程信息", e);
+                    Log.e(TAG, "获取进程信息失败", e);
                 }
                 
-                // 尝试不同的打开方式
                 Exception lastException = null;
                 
                 try {
@@ -184,17 +220,12 @@ public class Rs485Executor {
                     Log.e(TAG, "直接打开串口失败: " + e.getMessage(), e);
                     
                     try {
-                        // 方式2: 尝试使用root权限打开
-                        Log.d(TAG, "方式2: 尝试使用root权限打开");
-                        Process process = Runtime.getRuntime().exec("su -c chmod 666 " + currentPath);
-                        int result = process.waitFor();
-                        Log.i(TAG, "尝试使用root权限修改权限后打开, 结果代码: " + result);
+                        // 方式2: 使用root权限打开
+                        Log.d(TAG, "方式2: 使用root权限打开串口");
                         
-                        // 检查权限是否已修改
-                        process = Runtime.getRuntime().exec("ls -la " + currentPath);
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                        String line = reader.readLine();
-                        Log.i(TAG, "权限修改后串口文件信息: " + line);
+                        // 先尝试修改权限
+                        Process process = Runtime.getRuntime().exec("su -c chmod 666 " + currentPath);
+                        process.waitFor();
                         
                         serialPort = new SerialPort(portFile, BAUD_RATE, 0);
                         Log.i(TAG, "使用root权限打开串口成功");
@@ -203,14 +234,13 @@ public class Rs485Executor {
                         Log.e(TAG, "使用root权限打开串口失败: " + e2.getMessage(), e2);
                         
                         try {
-                            // 方式3: 尝试使用JNI直接访问
-                            Log.d(TAG, "方式3: 尝试使用原生方式访问串口");
-                            // 注意: 这里我们使用另一种构造方式
-                            serialPort = SerialPort.class.getConstructor(String.class, int.class)
-                                    .newInstance(currentPath, BAUD_RATE);
-                            Log.i(TAG, "使用原生方式访问串口成功");
+                            // 方式3: 使用反射方式打开
+                            Log.d(TAG, "方式3: 使用反射方式打开串口");
+                            Constructor<?> constructor = SerialPort.class.getDeclaredConstructor(File.class, int.class, int.class);
+                            constructor.setAccessible(true);
+                            serialPort = (SerialPort) constructor.newInstance(portFile, BAUD_RATE, 0);
+                            Log.i(TAG, "使用反射方式打开串口成功");
                         } catch (Exception e3) {
-                            lastException = e3;
                             Log.e(TAG, "所有方式均失败，无法打开串口: " + e3.getMessage(), e3);
                             throw lastException; // 抛出最后一个异常，以便后续处理
                         }
@@ -222,7 +252,7 @@ public class Rs485Executor {
                 outputStream = serialPort.getOutputStream();
                 Log.i(TAG, "串口打开成功: " + currentPath);
             } catch (SecurityException e) {
-                Log.e(TAG, "串口权限不足，无法访问: " + SERIAL_PORT_PATH, e);
+                Log.e(TAG, "串口权限不足，无法访问: " + currentPath, e);
                 Log.e(TAG, "请确保应用有root权限或者已经添加到蓝牙组");
                 
                 // 尝试使用其他方法获取权限
@@ -230,48 +260,71 @@ public class Rs485Executor {
                     Log.i(TAG, "尝试使用其他方法获取串口权限");
                     
                     // 尝试使用su命令直接打开串口
-                    Process process = Runtime.getRuntime().exec("su -c cat " + SERIAL_PORT_PATH);
+                    Process process = Runtime.getRuntime().exec("su -c cat " + currentPath);
                     int exitCode = process.waitFor();
-                    Log.i(TAG, "尝试使用su命令访问串口，返回码: " + exitCode);
+                    Log.i(TAG, "使用su命令访问串口，退出码: " + exitCode);
                     
-                    // 如果可以访问，则尝试再次修改权限
                     if (exitCode == 0) {
-                        process = Runtime.getRuntime().exec("su -c chmod 777 " + SERIAL_PORT_PATH);
-                        process.waitFor();
-                        Log.i(TAG, "尝试使用su命令修改串口权限为777");
+                        Log.i(TAG, "使用su命令成功访问串口，尝试使用JNI方式打开");
                         
-                        // 再次尝试打开串口
+                        // 尝试使用JNI方式打开串口
                         try {
-                            serialPort = new SerialPort(portFile, BAUD_RATE, 0);
+                            Constructor<?> constructor = SerialPort.class.getDeclaredConstructor(File.class, int.class, int.class);
+                            constructor.setAccessible(true);
+                            serialPort = (SerialPort) constructor.newInstance(portFile, BAUD_RATE, 0);
+                            
                             inputStream = serialPort.getInputStream();
                             outputStream = serialPort.getOutputStream();
-                            Log.i(TAG, "串口打开成功: " + SERIAL_PORT_PATH);
+                            Log.i(TAG, "串口打开成功: " + currentPath);
                         } catch (Exception e2) {
-                            Log.e(TAG, "再次尝试打开串口失败", e2);
+                            Log.e(TAG, "使用JNI方式打开串口失败: " + e2.getMessage(), e2);
                         }
+                    } else {
+                        Log.e(TAG, "使用su命令访问串口失败");
                     }
                 } catch (Exception e2) {
-                    Log.e(TAG, "尝试使用其他方法获取串口权限失败", e2);
+                    Log.e(TAG, "尝试使用其他方法获取串口权限失败: " + e2.getMessage(), e2);
                 }
-            } catch (UnsatisfiedLinkError e) {
-                Log.e(TAG, "加载本地库失败: libserial_port.so, 请检查库文件是否存在于正确路径", e);
             } catch (Exception e) {
-                Log.e(TAG, "打开串口失败: " + SERIAL_PORT_PATH + ", 请检查设备配置和权限", e);
+                Log.e(TAG, "打开串口失败: " + e.getMessage(), e);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Rs485Executor初始化过程中发生异常", e);
+            Log.e(TAG, "初始化串口执行器失败: " + e.getMessage(), e);
         }
     }
     
-    public static Rs485Executor getInstance() {
+    /**
+     * 获取Rs485Executor单例
+     *
+     * @return Rs485Executor实例
+     */
+    public static synchronized Rs485Executor getInstance() {
         if (instance == null) {
-            synchronized (Rs485Executor.class) {
-                if (instance == null) {
-                    instance = new Rs485Executor();
-                }
-            }
+            instance = new Rs485Executor();
         }
         return instance;
+    }
+    
+    /**
+     * 获取当前通信模式
+     * 
+     * @return 通信模式描述
+     */
+    public String getCurrentMode() {
+        return currentMode == CommunicationMode.DIRECT_SERIAL ? "直接串口通信" : "UDP Socket通信";
+    }
+    
+    /**
+     * 检查通信是否可用
+     * 
+     * @return 通信是否可用
+     */
+    public boolean isAvailable() {
+        if (currentMode == CommunicationMode.DIRECT_SERIAL) {
+            return serialPort != null && inputStream != null && outputStream != null;
+        } else {
+            return udpAdapter != null && inputStream != null && outputStream != null;
+        }
     }
     
     /**
@@ -283,8 +336,8 @@ public class Rs485Executor {
      * @throws InterruptedException 如果线程被中断
      */
     public byte[] write(byte[] data, int timeout) throws InterruptedException {
-        if (serialPort == null) {
-            Log.e(TAG, "串口未初始化或初始化失败，无法进行串口通信。请检查串口设备是否存在及权限设置");
+        if (!isAvailable()) {
+            Log.e(TAG, "通信未初始化或初始化失败，无法进行通信。当前模式: " + getCurrentMode());
             return null;
         }
         
@@ -299,7 +352,9 @@ public class Rs485Executor {
             try {
                 int available = inputStream.available();
                 if (available > 0) {
-                    inputStream.skip(available);
+                    byte[] buffer = new byte[available];
+                    inputStream.read(buffer);
+                    Log.d(TAG, "清空输入缓冲区: " + available + " 字节");
                 }
             } catch (IOException e) {
                 Log.e(TAG, "清空输入缓冲区失败: " + e.getMessage());
@@ -307,18 +362,15 @@ public class Rs485Executor {
             
             // 写入数据
             try {
-                outputStream.write(data);
-                outputStream.flush();
-                
                 // 打印发送的数据
                 StringBuilder sb = new StringBuilder();
                 for (byte b : data) {
                     sb.append(String.format("%02X ", b & 0xFF));
                 }
                 Log.d(TAG, "发送数据: " + sb.toString());
-            } catch (IOException e) {
-                Log.e(TAG, "写入数据失败: " + e.getMessage() + ", 请检查串口连接是否正常");
-                return null;
+                
+                outputStream.write(data);
+                outputStream.flush();
             } catch (Exception e) {
                 Log.e(TAG, "写入数据时发生异常: " + e.getMessage());
                 return null;
@@ -355,15 +407,13 @@ public class Rs485Executor {
                     }
                     
                     // 检查是否已经接收到完整的响应
-                    if (bytesRead >= 5) { // 至少包含从机地址、功能码、数据长度字段和CRC校验
-                        // 对于Modbus RTU协议，我们需要检查数据是否完整
-                        if (buffer[1] == 0x03 || buffer[1] == 0x04) { // 读取功能码
-                            int dataLength = buffer[2] & 0xFF;
-                            if (bytesRead >= dataLength + 5) { // 从机地址(1) + 功能码(1) + 数据长度(1) + 数据(n) + CRC(2)
-                                break;
-                            }
-                        } else if (buffer[1] == 0x06 || buffer[1] == 0x10) { // 写入功能码
-                            if (bytesRead >= 8) { // 从机地址(1) + 功能码(1) + 地址(2) + 值/长度(2) + CRC(2)
+                    // 这里可以根据具体的协议来判断响应是否完整
+                    // 例如，如果响应有固定长度，或者有特定的结束标记
+                    if (bytesRead > 0) {
+                        // 检查是否有结束标记
+                        for (int i = 0; i < bytesRead; i++) {
+                            // 这里假设0x0D是结束标记
+                            if (buffer[i] == 0x0D) {
                                 break;
                             }
                         }
@@ -405,28 +455,49 @@ public class Rs485Executor {
     }
     
     /**
-     * 关闭串口
+     * 关闭通信
      */
     public void close() {
         lock.lock();
         try {
-            if (serialPort != null) {
-                try {
-                    if (inputStream != null) {
-                        inputStream.close();
-                        inputStream = null;
+            if (currentMode == CommunicationMode.DIRECT_SERIAL) {
+                if (serialPort != null) {
+                    try {
+                        if (inputStream != null) {
+                            inputStream.close();
+                            inputStream = null;
+                        }
+                        if (outputStream != null) {
+                            outputStream.close();
+                            outputStream = null;
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Error closing streams: " + e.getMessage());
                     }
-                    if (outputStream != null) {
-                        outputStream.close();
-                        outputStream = null;
-                    }
-                } catch (IOException e) {
-                    Log.e(TAG, "Error closing streams: " + e.getMessage());
+                    
+                    serialPort.close();
+                    serialPort = null;
+                    Log.i(TAG, "Serial port closed");
                 }
-                
-                serialPort.close();
-                serialPort = null;
-                Log.i(TAG, "Serial port closed");
+            } else {
+                if (udpAdapter != null) {
+                    try {
+                        if (inputStream != null) {
+                            inputStream.close();
+                            inputStream = null;
+                        }
+                        if (outputStream != null) {
+                            outputStream.close();
+                            outputStream = null;
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Error closing UDP adapter streams: " + e.getMessage());
+                    }
+                    
+                    udpAdapter.close();
+                    udpAdapter = null;
+                    Log.i(TAG, "UDP adapter closed");
+                }
             }
         } finally {
             lock.unlock();

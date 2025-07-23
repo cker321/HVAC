@@ -44,7 +44,7 @@ public class ApiService extends Service {
         
         // 创建HTTP服务器
         try {
-            apiServer = new HttpApiServer(8080);
+            apiServer = new HttpApiServer(8080, this);
             Log.i(TAG, "HTTP API服务器创建成功，端口：8080");
         } catch (Exception e) {
             Log.e(TAG, "HTTP API服务器创建失败", e);

@@ -4,7 +4,7 @@
             "outputFile": "/Users/zhurui/WebstormProjects/apk/apk-api-service/app/build/intermediates/incremental/mergeDebugResources/merged.dir/values-v23/values-v23.xml",
             "map": [
                 {
-                    "source": "/Users/zhurui/.gradle/caches/transforms-3/3435de37de62453b43552eca277cdb9b/transformed/cardview-1.0.0/res/values-v23/values-v23.xml",
+                    "source": "/Users/zhurui/.gradle/caches/transforms-3/34275c8002b85bf459b153a2c92f3127/transformed/cardview-1.0.0/res/values-v23/values-v23.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -23,18 +23,7 @@
                     }
                 },
                 {
-                    "source": "/Users/zhurui/.gradle/caches/transforms-3/dee6a51a9c3c05c0416a59e5879add71/transformed/appcompat-1.3.0/res/values-v23/values-v23.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,20,34,35,36,39,43,44,45,46",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,190,325,400,487,1371,2267,2386,2513,2735,2959,3074,3181,3294",
-                        "endLines": "2,3,4,5,19,33,34,35,38,42,43,44,45,49",
-                        "endColumns": "134,134,74,86,12,12,118,126,12,12,114,106,112,12",
-                        "endOffsets": "185,320,395,482,1366,2262,2381,2508,2730,2954,3069,3176,3289,3519"
-                    }
-                },
-                {
-                    "source": "/Users/zhurui/.gradle/caches/transforms-3/71de35e86c45a332199eb23f9129d32f/transformed/material-1.4.0/res/values-v23/values-v23.xml",
+                    "source": "/Users/zhurui/.gradle/caches/transforms-3/a74e7d3097e9f19505317c0bb9b52a3d/transformed/material-1.4.0/res/values-v23/values-v23.xml",
                     "from": {
                         "startLines": "2,6",
                         "startColumns": "4,4",
@@ -50,6 +39,17 @@
                         "endLines": "56,60",
                         "endColumns": "10,10",
                         "endOffsets": "3934,4207"
+                    }
+                },
+                {
+                    "source": "/Users/zhurui/.gradle/caches/transforms-3/b9bd4076bbc95c4eb2552c82338cb5c8/transformed/appcompat-1.3.0/res/values-v23/values-v23.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,20,34,35,36,39,43,44,45,46",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,190,325,400,487,1371,2267,2386,2513,2735,2959,3074,3181,3294",
+                        "endLines": "2,3,4,5,19,33,34,35,38,42,43,44,45,49",
+                        "endColumns": "134,134,74,86,12,12,118,126,12,12,114,106,112,12",
+                        "endOffsets": "185,320,395,482,1366,2262,2381,2508,2730,2954,3069,3176,3289,3519"
                     }
                 }
             ]
