@@ -181,6 +181,16 @@ public class HttpApiServer extends NanoHTTPD {
             // }
             
             try {
+                // 获取指定房间空调状态
+                if (params.get("machineNo") != null && !params.get("machineNo").isEmpty()) {
+                    int machineNo = Integer.parseInt(params.get("machineNo"));
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("code", 200);
+                    result.put("message", "success");
+                    result.put("data", getRoomStatus(machineNo));
+                    return newJsonResponse(result);
+                }
+                
                 // 基于户型获取所有房间的设备状态
                 Map<String, Object> roomStatusResult = roomController.getAllRoomStatus();
                 

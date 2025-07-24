@@ -271,14 +271,15 @@ public class AirControlHandler {
         }
         
         // 策略B：如果原协议失败，尝试单寄存器写入（修复后）
-        Log.e(TAG, "策略A失败，尝试策略B：单寄存器写入（功能码06，已修夏bug）");
-        boolean singleRegisterSuccess = trySingleRegisterWrite(cmdType, value);
-        if (singleRegisterSuccess) {
-            Log.e(TAG, "策略B成功！使用单寄存器写入");
-            return true;
-        }
+        // Log.e(TAG, "策略A失败，尝试策略B：单寄存器写入（功能码06，已修夏bug）");
+        // boolean singleRegisterSuccess = trySingleRegisterWrite(cmdType, value);
+        // if (singleRegisterSuccess) {
+        //     Log.e(TAG, "策略B成功！使用单寄存器写入");
+        //     return true;
+        // }
         
-        Log.e(TAG, "双重策略都失败了");
+        // Log.e(TAG, "双重策略都失败了");
+        Log.e(TAG, "策略A失败了");
         return false;
     }
     
@@ -328,73 +329,52 @@ public class AirControlHandler {
         // 构建18字节的数据结构（基于原报文分析）
         int[] registerValues = new int[9];
         
-        // 初始化为全零
-        for (int i = 0; i < 9; i++) {
-            registerValues[i] = 0;
+        // 先读取当前设备状态，获取现有的寄存器值
+        TicaInnerStatus currentStatus = readInnerStatus();
+        if (currentStatus == null) {
+            Log.w(TAG, "无法读取当前设备状态，使用默认值");
+            // 如果读取失败，使用默认值
+            registerValues[0] = 0x0001; // 默认模式
+            registerValues[1] = 0x0018; // 默认温度24度
+            registerValues[2] = 0x0003; // 默认风速3
+            registerValues[3] = 0x0080; // 默认电源开启
+            registerValues[4] = 0x0000; // 保留
+            registerValues[5] = getControlBit(); // 控制位
+            registerValues[6] = 0x0000; // 保留
+            registerValues[7] = 0x0000; // 保留
+            registerValues[8] = 0x0000; // 保留
+        } else {
+            // 使用当前状态的值作为基础，但需要按照协议格式处理
+            // 注意：从设备读取的是原始整数值，但协议中需要特定的值
+            registerValues[0] = currentStatus.getSettingMode(); // 当前模式（原始值）
+            registerValues[1] = currentStatus.getSettingTemp(); // 当前设定温度（原始值，如 24）
+            registerValues[2] = currentStatus.getSettingWindSpeed(); // 当前风速（原始值，如 3）
+            registerValues[3] = currentStatus.isPowerSetting() ? 0x0080 : 0x0000; // 当前电源状态
+            registerValues[4] = 0x0000; // 保留
+            registerValues[5] = getControlBit(); // 控制位（根据machineNo）
+            registerValues[6] = 0x0000; // 保留
+            registerValues[7] = 0x0000; // 保留
+            registerValues[8] = 0x0000; // 保留
+            Log.e(TAG, "读取到当前状态 - 模式:" + currentStatus.getSettingMode() + ", 温度:" + currentStatus.getSettingTemp() + ", 风速:" + currentStatus.getSettingWindSpeed() + ", 电源:" + currentStatus.isPowerSetting());
+            Log.e(TAG, "转换为寄存器值 - registerValues[0]:0x" + String.format("%04X", registerValues[0]) + ", registerValues[1]:0x" + String.format("%04X", registerValues[1]) + ", registerValues[2]:0x" + String.format("%04X", registerValues[2]));
         }
         
-        // 根据命令类型设置对应的寄存器值
+        // 根据命令类型，只修改需要改变的参数
         switch (cmdType) {
             case CMD_POWER:
-                if (value == 1) {  // 电源开启
-                    // 根据真正成功的报文: 00 01 00 18 00 03 00 80 00 00 00 01 00 00 00 00 00 00
-                    // 寄存器索引:                [0] [1] [2] [3] [4] [5] [6] [7] [8]
-                    registerValues[0] = 0x0001; // 模式或状态标志
-                    registerValues[1] = 0x0018; // 温度设置（24度，0x18=24）
-                    registerValues[2] = 0x0003; // 风速设置
-                    registerValues[3] = 0x0080; // 电源控制位（0x80=128）
-                    registerValues[4] = 0x0000; // 保留
-                    registerValues[5] = getControlBit(); // 动态控制位（根据machineNo）
-                    registerValues[6] = 0x0000; // 保留
-                    registerValues[7] = 0x0000; // 保留
-                    registerValues[8] = 0x0000; // 保留
-                    Log.e(TAG, "设置电源开启: 模式=0x01, 温度=24度, 风速=3, 电源=0x80, 控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
-                } else {
-                    // 电源关闭：保持基本设置，只关闭电源控制位
-                    // 方案1：保持模式、温度、风速设置，只关闭电源位
-                    registerValues[0] = 0x0001; // 保持模式标志
-                    registerValues[1] = 0x0018; // 保持温度设置（24度）
-                    registerValues[2] = 0x0003; // 保持风速设置
-                    registerValues[3] = 0x0000; // 关闭电源控制位（从0x80改为0x00）
-                    registerValues[4] = 0x0000; // 保留
-                    registerValues[5] = getControlBit(); // 保持控制位（根据machineNo）
-                    registerValues[6] = 0x0000; // 保留
-                    registerValues[7] = 0x0000; // 保留
-                    registerValues[8] = 0x0000; // 保留
-                    Log.e(TAG, "设置电源关闭: 保持设置，只关闭电源位(0x80->0x00)，控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
-                }
+                registerValues[3] = (value == 1) ? 0x0080 : 0x0000; // 只修改电源位
+                Log.e(TAG, "设置电源: " + (value == 1 ? "开启" : "关闭") + "，控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
                 break;
             case CMD_MODE:
-                // 保持基本结构，但确保其他必要位也设置
-                registerValues[0] = value; // 模式控制
-                registerValues[1] = 0x0018; // 默认温度24度
-                registerValues[2] = 0x0003; // 默认风速3
-                registerValues[3] = 0x0080; // 保持电源开启
-                registerValues[5] = getControlBit(); // 保持控制位（根据machineNo）
-                registerValues[6] = 0x0000; // 保留
-                registerValues[7] = 0x0000; // 保留
-                registerValues[8] = 0x0000; // 保留
+                registerValues[0] = value; // 只修改模式
                 Log.e(TAG, "设置模式: " + value + "，控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
                 break;
             case CMD_TEMP:
-                // 温度控制，保持其他必要位
-                registerValues[0] = 0x0001; // 保持模式
-                registerValues[1] = value; // 温度设置
-                registerValues[2] = 0x0003; // 保持风速
-                registerValues[3] = 0x0080; // 保持电源开启
-                registerValues[5] = getControlBit(); // 保持控制位（根据machineNo）
-                registerValues[6] = 0x0000; // 保留
-                registerValues[7] = 0x0000; // 保留
-                registerValues[8] = 0x0000; // 保留
+                registerValues[1] = value; // 只修改温度
                 Log.e(TAG, "设置温度: " + value + "度，控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
                 break;
             case CMD_SPEED:
-                // 风速控制，保持其他必要位
-                registerValues[0] = 0x0001; // 保持模式
-                registerValues[1] = 0x0018; // 保持温度24度
-                registerValues[2] = value; // 风速设置
-                registerValues[3] = 0x0080; // 保持电源开启
-                registerValues[5] = getControlBit(); // 动态控制位
+                registerValues[2] = value; // 只修改风速
                 Log.e(TAG, "设置风速: " + value + "，控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
                 break;
         }
