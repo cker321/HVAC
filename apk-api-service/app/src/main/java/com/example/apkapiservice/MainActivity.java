@@ -59,6 +59,11 @@ public class MainActivity extends AppCompatActivity {
     private RadioButton rbHouseT41;
     private RadioButton rbHouseT42;
     
+    // 房间选择
+    private RadioGroup rgRoomSelection;
+    private TextView tvNoRooms;
+    private int selectedRoomId = 1; // 默认选中第一个房间
+    
     // API测试按钮
     private Button btnTestAirStatus;
     private Button btnTestAirPowerOn;
@@ -68,6 +73,25 @@ public class MainActivity extends AppCompatActivity {
     private Button btnTestWindPowerOff;
     private Button btnTestRoomInit;
     private Button btnTestRoomStatus;
+    
+    // 空调控制按钮
+    private Button btnTestAirModeCool;
+    private Button btnTestAirModeHeat;
+    private Button btnTestAirTempDown;
+    private Button btnTestAirTempUp;
+    private Button btnTestAirSpeedLow;
+    private Button btnTestAirSpeedMed;
+    private Button btnTestAirSpeedHigh;
+    private Button btnTestAirSpeedAuto;
+    
+    // 新风控制按钮
+    private Button btnTestWindSpeedLow;
+    private Button btnTestWindSpeedMed;
+    private Button btnTestWindSpeedHigh;
+    private Button btnTestWindSpeedLowOff;
+    private Button btnTestWindSpeedMedOff;
+    private Button btnTestWindSpeedHighOff;
+    private Button btnTestWindAllOff;
     
     private String deviceIpAddress = "";
     private final int API_PORT = 8080;
@@ -87,6 +111,9 @@ public class MainActivity extends AppCompatActivity {
         
         // 更新服务状态
         updateServiceStatus();
+        
+        // 程序启动时自动启动服务（避免重复启动）
+        autoStartServiceIfNeeded();
     }
     
     /**
@@ -110,6 +137,10 @@ public class MainActivity extends AppCompatActivity {
         rbHouseT41 = findViewById(R.id.rb_house_t4_1);
         rbHouseT42 = findViewById(R.id.rb_house_t4_2);
         
+        // 初始化房间选择
+        rgRoomSelection = findViewById(R.id.rg_room_selection);
+        tvNoRooms = findViewById(R.id.tv_no_rooms);
+        
         // 初始化API测试按钮
         btnTestAirStatus = findViewById(R.id.btn_test_air_status);
         btnTestAirPowerOn = findViewById(R.id.btn_test_air_power_on);
@@ -121,6 +152,25 @@ public class MainActivity extends AppCompatActivity {
         // 添加房间API测试按钮
         btnTestRoomInit = findViewById(R.id.btn_test_room_init);
         btnTestRoomStatus = findViewById(R.id.btn_test_room_status);
+        
+        // 初始化空调控制按钮
+        btnTestAirModeCool = findViewById(R.id.btn_test_air_mode_cool);
+        btnTestAirModeHeat = findViewById(R.id.btn_test_air_mode_heat);
+        btnTestAirTempDown = findViewById(R.id.btn_test_air_temp_down);
+        btnTestAirTempUp = findViewById(R.id.btn_test_air_temp_up);
+        btnTestAirSpeedLow = findViewById(R.id.btn_test_air_speed_low);
+        btnTestAirSpeedMed = findViewById(R.id.btn_test_air_speed_med);
+        btnTestAirSpeedHigh = findViewById(R.id.btn_test_air_speed_high);
+        btnTestAirSpeedAuto = findViewById(R.id.btn_test_air_speed_auto);
+        
+        // 初始化新风控制按钮
+        btnTestWindSpeedLow = findViewById(R.id.btn_test_wind_speed_low);
+        btnTestWindSpeedMed = findViewById(R.id.btn_test_wind_speed_med);
+        btnTestWindSpeedHigh = findViewById(R.id.btn_test_wind_speed_high);
+        btnTestWindSpeedLowOff = findViewById(R.id.btn_test_wind_speed_low_off);
+        btnTestWindSpeedMedOff = findViewById(R.id.btn_test_wind_speed_med_off);
+        btnTestWindSpeedHighOff = findViewById(R.id.btn_test_wind_speed_high_off);
+        btnTestWindAllOff = findViewById(R.id.btn_test_wind_all_off);
         
         // 获取设备IP地址并更新显示
         deviceIpAddress = getLocalIpAddress();
@@ -163,27 +213,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         
-        // 测试获取空调状态
+        // 测试获取空调状态（使用当前选中房间）
         btnTestAirStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                testApiRequest("/api/air/status", "GET");
+                testApiRequest("/api/air/status?machineNo=" + selectedRoomId, "GET");
             }
         });
         
-        // 测试空调开机（默认机器编号1）
+        // 测试空调开机（使用当前选中房间）
         btnTestAirPowerOn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                testApiRequest("/api/air/control?action=power&value=1&machineNo=1", "GET");
+                testApiRequest("/api/air/control?action=power&value=1&machineNo=" + selectedRoomId, "GET");
             }
         });
         
-        // 测试空调关机（默认机器编号1）
+        // 测试空调关机（使用当前选中房间）
         btnTestAirPowerOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                testApiRequest("/api/air/control?action=power&value=0&machineNo=1", "GET");
+                testApiRequest("/api/air/control?action=power&value=0&machineNo=" + selectedRoomId, "GET");
             }
         });
         
@@ -230,6 +280,202 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+        
+        // 空调模式控制
+        btnTestAirModeCool.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testApiRequest("/api/air/control?action=mode&value=1&machineNo=" + selectedRoomId, "GET");
+            }
+        });
+        
+        btnTestAirModeHeat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testApiRequest("/api/air/control?action=mode&value=2&machineNo=" + selectedRoomId, "GET");
+            }
+        });
+        
+        // 空调温度控制 降低空调当前温度
+        btnTestAirTempDown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 先获取当前空调温度，
+
+                // 然后降低1度
+
+                // 如果超过最低 不执行
+                testApiRequest("/api/air/control?action=temp&value=20&machineNo=" + selectedRoomId, "GET");
+            }
+        });
+        
+        btnTestAirTempUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 先获取当前空调温度
+
+                // 然后升高1度
+
+                // 如果超过最高 不执行
+                testApiRequest("/api/air/control?action=temp&value=26&machineNo=" + selectedRoomId, "GET");
+            }
+        });
+        
+        // 空调风速控制
+        btnTestAirSpeedLow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testApiRequest("/api/air/control?action=speed&value=0&machineNo=" + selectedRoomId, "GET");
+            }
+        });
+        
+        btnTestAirSpeedMed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testApiRequest("/api/air/control?action=speed&value=1&machineNo=" + selectedRoomId, "GET");
+            }
+        });
+        
+        btnTestAirSpeedHigh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testApiRequest("/api/air/control?action=speed&value=2&machineNo=" + selectedRoomId, "GET");
+            }
+        });
+
+        btnTestAirSpeedAuto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testApiRequest("/api/air/control?action=speed&value=3&machineNo=" + selectedRoomId, "GET");
+            }
+        });
+        
+        // 新风控制按钮点击事件
+        btnTestWindSpeedLow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean success = WindControlHandler.getInstance().setLowWindPower(WindControlHandler.POWER_ON);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tvApiResponse.setText("低风开启: " + (success ? "成功" : "失败"));
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+        
+        btnTestWindSpeedMed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean success = WindControlHandler.getInstance().setMediumWindPower(WindControlHandler.POWER_ON);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tvApiResponse.setText("中风开启: " + (success ? "成功" : "失败"));
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+        
+        btnTestWindSpeedHigh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean success = WindControlHandler.getInstance().setHighWindPower(WindControlHandler.POWER_ON);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tvApiResponse.setText("高风开启: " + (success ? "成功" : "失败"));
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+        
+        btnTestWindSpeedLowOff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean success = WindControlHandler.getInstance().setLowWindPower(WindControlHandler.POWER_OFF);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tvApiResponse.setText("低风关闭: " + (success ? "成功" : "失败"));
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+        
+        btnTestWindSpeedMedOff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean success = WindControlHandler.getInstance().setMediumWindPower(WindControlHandler.POWER_OFF);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tvApiResponse.setText("中风关闭: " + (success ? "成功" : "失败"));
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+        
+        btnTestWindSpeedHighOff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean success = WindControlHandler.getInstance().setHighWindPower(WindControlHandler.POWER_OFF);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tvApiResponse.setText("高风关闭: " + (success ? "成功" : "失败"));
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+        
+        btnTestWindAllOff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean success = WindControlHandler.getInstance().turnOffAllWind();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tvApiResponse.setText("关闭所有新风: " + (success ? "成功" : "失败"));
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
     }
     
     /**
@@ -384,6 +630,33 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
+     * 程序启动时自动启动服务（避免重复启动）
+     */
+    private void autoStartServiceIfNeeded() {
+        // 检查服务是否已经在运行
+        if (!isServiceRunning) {
+            try {
+                // 启动服务
+                startApiService();
+                
+                // 显示自动启动信息
+                if (tvApiResponse != null) {
+                    tvApiResponse.setText("程序启动时自动启动API服务成功");
+                }
+                
+                Log.d("MainActivity", "程序启动时自动启动API服务成功");
+            } catch (Exception e) {
+                Log.e("MainActivity", "自动启动服务失败: " + e.getMessage());
+                if (tvApiResponse != null) {
+                    tvApiResponse.setText("自动启动服务失败: " + e.getMessage());
+                }
+            }
+        } else {
+            Log.d("MainActivity", "服务已在运行，无需重复启动");
+        }
+    }
+    
+    /**
      * 应用户型设置
      */
     private void applyHouseType() {
@@ -401,6 +674,10 @@ public class MainActivity extends AppCompatActivity {
         
         final String finalHouseType = houseType;
         Log.d(TAG, "设置户型类型: applyHouseType finalHouseType: " + finalHouseType);
+        
+        // 更新房间选择
+        updateRoomSelection(finalHouseType);
+        
         testApiRequest("/api/house/type", "POST", "{\"houseType\":\"" + finalHouseType + "\"}");
     }
     
@@ -415,8 +692,8 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                // 读取空调状态
-                final TicaInnerStatus airStatus = AirControlHandler.getInstance().readStatus();
+                // 读取空调状态（使用当前选中房间）
+                final TicaInnerStatus airStatus = AirControlHandler.getInstance().readStatus(selectedRoomId);
                 
                 // 读取新风状态
                 final WindStatus windStatus = WindControlHandler.getInstance().readStatus();
@@ -543,6 +820,70 @@ public class MainActivity extends AppCompatActivity {
                 return "低风";
             default:
                 return "未知(" + speed + ")";
+        }
+    }
+    
+    /**
+     * 更新房间选择
+     */
+    private void updateRoomSelection(String houseType) {
+        // 清除现有的房间选项
+        rgRoomSelection.removeAllViews();
+        
+        // 根据户型获取房间列表
+        HouseType hType = null;
+        if ("T2".equals(houseType)) {
+            hType = HouseType.T2;
+        } else if ("T4-1".equals(houseType)) {
+            hType = HouseType.T4_1;
+        } else if ("T4-2".equals(houseType)) {
+            hType = HouseType.T4_2;
+        }
+        
+        if (hType != null) {
+            java.util.List<Room> rooms = RoomManager.getInstance().getCurrentRooms();
+            
+            if (rooms != null && !rooms.isEmpty()) {
+                // 隐藏“请先选择户型”提示
+                tvNoRooms.setVisibility(View.GONE);
+                
+                // 为每个房间创建 RadioButton
+                boolean isFirst = true;
+                for (Room room : rooms) {
+                    RadioButton rbRoom = new RadioButton(this);
+                    rbRoom.setId(View.generateViewId());
+                    rbRoom.setText(room.getRoomName());
+                    rbRoom.setTag(room.getId()); // 将房间ID保存在tag中
+                    
+                    // 默认选中第一个房间
+                    if (isFirst) {
+                        rbRoom.setChecked(true);
+                        selectedRoomId = room.getId();
+                        isFirst = false;
+                    }
+                    
+                    // 设置点击事件
+                    rbRoom.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(android.widget.CompoundButton buttonView, boolean isChecked) {
+                            if (isChecked) {
+                                selectedRoomId = (Integer) buttonView.getTag();
+                                Log.d(TAG, "选中房间: " + buttonView.getText() + ", ID: " + selectedRoomId);
+                            }
+                        }
+                    });
+                    
+                    rgRoomSelection.addView(rbRoom);
+                }
+            } else {
+                // 显示无房间提示
+                tvNoRooms.setText("该户型暂无房间配置");
+                tvNoRooms.setVisibility(View.VISIBLE);
+            }
+        } else {
+            // 显示请先选择户型提示
+            tvNoRooms.setText("请先选择户型");
+            tvNoRooms.setVisibility(View.VISIBLE);
         }
     }
 }

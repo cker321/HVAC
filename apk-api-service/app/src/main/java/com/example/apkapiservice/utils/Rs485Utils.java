@@ -126,13 +126,13 @@ public class Rs485Utils {
         }
         
         // 添加详细的调试日志
-        Log.e(TAG, "*** Modbus协议校验 ***");
-        Log.e(TAG, "请求数据: " + bytesToHex(request));
-        Log.e(TAG, "响应数据: " + bytesToHex(response));
-        Log.e(TAG, "请求从机地址: 0x" + String.format("%02X", request[0] & 0xFF));
-        Log.e(TAG, "响应从机地址: 0x" + String.format("%02X", response[0] & 0xFF));
-        Log.e(TAG, "请求功能码: 0x" + String.format("%02X", request[1] & 0xFF));
-        Log.e(TAG, "响应功能码: 0x" + String.format("%02X", response[1] & 0xFF));
+        // Log.e(TAG, "*** Modbus协议校验 ***");
+        // Log.e(TAG, "请求数据: " + bytesToHex(request));
+        // Log.e(TAG, "响应数据: " + bytesToHex(response));
+        // Log.e(TAG, "请求从机地址: 0x" + String.format("%02X", request[0] & 0xFF));
+        // Log.e(TAG, "响应从机地址: 0x" + String.format("%02X", response[0] & 0xFF));
+        // Log.e(TAG, "请求功能码: 0x" + String.format("%02X", request[1] & 0xFF));
+        // Log.e(TAG, "响应功能码: 0x" + String.format("%02X", response[1] & 0xFF));
         
         // 检查是否为Modbus异常响应
         if ((response[1] & 0x80) != 0) {

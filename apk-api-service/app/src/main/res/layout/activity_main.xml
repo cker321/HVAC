@@ -117,6 +117,40 @@
                     android:layout_marginTop="8dp" />
             </LinearLayout>
 
+            <!-- 房间选择 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#e6f3ff"
+                android:padding="8dp"
+                android:layout_marginBottom="16dp">
+                
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="房间选择"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+                    
+                <RadioGroup
+                    android:id="@+id/rg_room_selection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    
+                    <!-- 房间选项将根据户型动态生成 -->
+                    <TextView
+                        android:id="@+id/tv_no_rooms"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="请先选择户型"
+                        android:textColor="#666666"
+                        android:gravity="center"
+                        android:padding="16dp" />
+                </RadioGroup>
+            </LinearLayout>
+
             <TextView
                 android:id="@+id/tv_air_status"
                 android:layout_width="match_parent"
@@ -225,6 +259,95 @@
                     android:layout_height="wrap_content"
                     android:text="空调关机"
                     android:layout_marginBottom="8dp" />
+                    
+                <!-- 模式控制按钮 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+                    
+                    <Button
+                        android:id="@+id/btn_test_air_mode_cool"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="制冷"
+                        android:layout_marginEnd="4dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_air_mode_heat"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="制热"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+                
+                <!-- 温度控制按钮 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+                    
+                    <Button
+                        android:id="@+id/btn_test_air_temp_down"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="温度-"
+                        android:layout_marginEnd="4dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_air_temp_up"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="温度+"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+                
+                <!-- 风速控制按钮 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+                    
+                    <Button
+                        android:id="@+id/btn_test_air_speed_low"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="低风"
+                        android:layout_marginEnd="2dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_air_speed_med"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="中风"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_air_speed_high"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="高风"
+                        android:layout_marginStart="2dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_air_speed_auto"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="自动"
+                        android:layout_marginStart="2dp" />
+                </LinearLayout>
             </LinearLayout>
             
             <!-- 房间API测试 -->
@@ -294,6 +417,112 @@
                     android:layout_height="wrap_content"
                     android:text="新风关机"
                     android:layout_marginBottom="8dp" />
+                    
+                <!-- 新风风速控制按钮 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+                    
+                    <Button
+                        android:id="@+id/btn_test_wind_speed_low"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="低风开"
+                        android:layout_marginEnd="2dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_wind_speed_med"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="中风开"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_wind_speed_high"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="高风开"
+                        android:layout_marginStart="2dp" />
+                </LinearLayout>
+                
+                <!-- 新风关闭按钮 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+                    
+                    <Button
+                        android:id="@+id/btn_test_wind_speed_low_off"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="低风关"
+                        android:layout_marginEnd="2dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_wind_speed_med_off"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="中风关"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_wind_speed_high_off"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="高风关"
+                        android:layout_marginStart="2dp" />
+                </LinearLayout>
+                
+                <Button
+                    android:id="@+id/btn_test_wind_all_off"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="关闭所有新风"
+                    android:layout_marginBottom="8dp" />
+                    
+                <!-- 新风模式控制按钮 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+                    
+                    <Button
+                        android:id="@+id/btn_test_wind_mode_vent"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="通风"
+                        android:layout_marginEnd="2dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_wind_mode_dehumid"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="除湿"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp" />
+                        
+                    <Button
+                        android:id="@+id/btn_test_wind_mode_auto"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="自动"
+                        android:layout_marginStart="2dp" />
+                </LinearLayout>
             </LinearLayout>
             
             <!-- API响应结果 -->

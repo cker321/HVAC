@@ -1,5 +1,7 @@
 com/example/apkapiservice/bean/Room.java
  com.example.apkapiservice.bean.Room
+com/example/apkapiservice/andserver/plugin/generator/Vrcmgusrol.java
+ com.example.apkapiservice.andserver.plugin.generator.Vrcmgusrol
 com/example/apkapiservice/utils/JsonResponse.java
  com.example.apkapiservice.utils.JsonResponse
 com/example/apkapiservice/utils/UdpSerialAdapter.java
@@ -21,8 +23,6 @@ com/example/apkapiservice/BuildConfig.java
 com/example/apkapiservice/utils/Rs485Executor.java
  com.example.apkapiservice.utils.Rs485Executor
  com.example.apkapiservice.utils.Rs485Executor$CommunicationMode
-com/example/apkapiservice/andserver/plugin/generator/Pbviyilzer.java
- com.example.apkapiservice.andserver.plugin.generator.Pbviyilzer
 com/example/apkapiservice/bean/TicaInnerStatus.java
  com.example.apkapiservice.bean.TicaInnerStatus
 com/example/apkapiservice/server/HttpApiServer.java
@@ -36,11 +36,41 @@ com/example/apkapiservice/MainActivity.java
  com.example.apkapiservice.MainActivity$11
  com.example.apkapiservice.MainActivity$12
  com.example.apkapiservice.MainActivity$13
- com.example.apkapiservice.MainActivity$13$1
  com.example.apkapiservice.MainActivity$14
- com.example.apkapiservice.MainActivity$14$1
+ com.example.apkapiservice.MainActivity$15
+ com.example.apkapiservice.MainActivity$16
+ com.example.apkapiservice.MainActivity$17
+ com.example.apkapiservice.MainActivity$18
+ com.example.apkapiservice.MainActivity$19
  com.example.apkapiservice.MainActivity$2
+ com.example.apkapiservice.MainActivity$20
+ com.example.apkapiservice.MainActivity$21
+ com.example.apkapiservice.MainActivity$21$1
+ com.example.apkapiservice.MainActivity$21$1$1
+ com.example.apkapiservice.MainActivity$22
+ com.example.apkapiservice.MainActivity$22$1
+ com.example.apkapiservice.MainActivity$22$1$1
+ com.example.apkapiservice.MainActivity$23
+ com.example.apkapiservice.MainActivity$23$1
+ com.example.apkapiservice.MainActivity$23$1$1
+ com.example.apkapiservice.MainActivity$24
+ com.example.apkapiservice.MainActivity$24$1
+ com.example.apkapiservice.MainActivity$24$1$1
+ com.example.apkapiservice.MainActivity$25
+ com.example.apkapiservice.MainActivity$25$1
+ com.example.apkapiservice.MainActivity$25$1$1
+ com.example.apkapiservice.MainActivity$26
+ com.example.apkapiservice.MainActivity$26$1
+ com.example.apkapiservice.MainActivity$26$1$1
+ com.example.apkapiservice.MainActivity$27
+ com.example.apkapiservice.MainActivity$27$1
+ com.example.apkapiservice.MainActivity$27$1$1
+ com.example.apkapiservice.MainActivity$28
+ com.example.apkapiservice.MainActivity$28$1
+ com.example.apkapiservice.MainActivity$29
+ com.example.apkapiservice.MainActivity$29$1
  com.example.apkapiservice.MainActivity$3
+ com.example.apkapiservice.MainActivity$30
  com.example.apkapiservice.MainActivity$4
  com.example.apkapiservice.MainActivity$5
  com.example.apkapiservice.MainActivity$6

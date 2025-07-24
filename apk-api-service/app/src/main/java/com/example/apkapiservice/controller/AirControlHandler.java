@@ -21,7 +21,21 @@ public class AirControlHandler {
     private static AirControlHandler instance;
     
     // RS485通信相关常量
-    private static final int AIR_ADDRESS = 3;
+    // 根据真实报文分析：所有机器都使用相同的设备地址0x03
+    // 机器区分通过寄存器[5]的控制位实现（位掩码模式）
+    private static final int AIR_ADDRESS = 3; // 所有机器都使用0x03
+    
+    /**
+     * 根据机器编号计算控制位（位掩码）
+     * machineNo=1 -> 控制位0x01 (2^0)
+     * machineNo=2 -> 控制位0x02 (2^1)
+     * machineNo=3 -> 控制位0x04 (2^2)
+     * machineNo=4 -> 控制位0x08 (2^3)
+     * machineNo=5 -> 控制位0x10 (2^4)
+     */
+    private int getControlBit() {
+        return (int) Math.pow(2, this.machineNo - 1); // 位掩码计算
+    }
     private static final int READ_FUNCTION_CODE = 3;
     private static final int WRITE_FUNCTION_CODE = 16;
     private static final int INNER_START_ADDRESS = 144;
@@ -101,6 +115,13 @@ public class AirControlHandler {
      * 读取空调内机状态
      */
     public TicaInnerStatus readInnerStatus() {
+        return readInnerStatus(this.machineNo);
+    }
+    
+    /**
+     * 读取空调内机状态
+     */
+    public TicaInnerStatus readInnerStatus(int machineNo) {
         Log.e(TAG, "*** 开始读取空调内机状态 ***");
         Log.e(TAG, "机器编号: " + this.machineNo);
         Log.e(TAG, "设备地址: " + AIR_ADDRESS);
@@ -114,30 +135,29 @@ public class AirControlHandler {
         int startAddress = ((this.machineNo - 1) * 16) + INNER_START_ADDRESS;
         Log.e(TAG, "计算得到的起始地址: " + startAddress);
         
-        byte[] readSendBytes = Rs485Utils.getInstance().getReadSendBytes(
+        byte[] readBytes = Rs485Utils.getInstance().getReadSendBytes(
                 AIR_ADDRESS, 
                 READ_FUNCTION_CODE, 
                 startAddress, 
-                16
-        );
-        Log.e(TAG, "生成读取命令: " + bytesToHex(readSendBytes));
+                16);
+        Log.e(TAG, "生成读取命令: " + bytesToHex(readBytes));
         
         boolean success = false;
         try {
             Log.e(TAG, "尝试通过串口读取空调状态");
-            byte[] response = Rs485Executor.getInstance().write(readSendBytes, 300);
+            byte[] response = Rs485Executor.getInstance().write(readBytes, 300);
             
             if (response != null) {
                 Log.e(TAG, "收到响应数据: " + bytesToHex(response));
                 Log.e(TAG, "响应数据长度: " + response.length);
                 
-                if (Rs485Utils.getInstance().returnCheck(response, readSendBytes)) {
+                if (Rs485Utils.getInstance().returnCheck(response, readBytes)) {
                     Log.e(TAG, "数据校验成功，开始解析数据");
                     byte[] dataArray = Rs485Utils.getInstance().calReadDataArray(response);
                     Log.e(TAG, "提取的数据数组: " + bytesToHex(dataArray));
                     
                     convertToTicaInnerStatus(status, dataArray);
-                    Log.e(TAG, "数据转换完成");
+                    // Log.e(TAG, "数据转换完成");
                     
                     status.setMachineNo(this.machineNo);
                     status.setDeviceSn(String.valueOf(this.machineNo));
@@ -146,10 +166,11 @@ public class AirControlHandler {
                     this.ticaInnerStatus = status;
                     statusMap.put(this.machineNo, status);
                     success = true;
-                    Log.e(TAG, "空调状态读取成功");
+                    Log.e(TAG, "空调状态: " + status.toString());
+                    // Log.e(TAG, "空调状态读取成功");
                 } else {
                     Log.e(TAG, "数据校验失败！");
-                    Log.e(TAG, "发送的命令: " + bytesToHex(readSendBytes));
+                    Log.e(TAG, "发送的命令: " + bytesToHex(readBytes));
                     Log.e(TAG, "收到的响应: " + bytesToHex(response));
                 }
             } else {
@@ -171,6 +192,7 @@ public class AirControlHandler {
         return status;
     }
     
+
     /**
      * 读取空调外机状态
      */
@@ -322,11 +344,11 @@ public class AirControlHandler {
                     registerValues[2] = 0x0003; // 风速设置
                     registerValues[3] = 0x0080; // 电源控制位（0x80=128）
                     registerValues[4] = 0x0000; // 保留
-                    registerValues[5] = 0x0001; // 另一个控制位
+                    registerValues[5] = getControlBit(); // 动态控制位（根据machineNo）
                     registerValues[6] = 0x0000; // 保留
                     registerValues[7] = 0x0000; // 保留
                     registerValues[8] = 0x0000; // 保留
-                    Log.e(TAG, "设置电源开启: 模式=0x01, 温度=24度, 风速=3, 电源=0x80, 控制位=0x01");
+                    Log.e(TAG, "设置电源开启: 模式=0x01, 温度=24度, 风速=3, 电源=0x80, 控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
                 } else {
                     // 电源关闭：保持基本设置，只关闭电源控制位
                     // 方案1：保持模式、温度、风速设置，只关闭电源位
@@ -335,11 +357,11 @@ public class AirControlHandler {
                     registerValues[2] = 0x0003; // 保持风速设置
                     registerValues[3] = 0x0000; // 关闭电源控制位（从0x80改为0x00）
                     registerValues[4] = 0x0000; // 保留
-                    registerValues[5] = 0x0001; // 关闭另一个控制位（从0x01改为0x00）
+                    registerValues[5] = getControlBit(); // 保持控制位（根据machineNo）
                     registerValues[6] = 0x0000; // 保留
                     registerValues[7] = 0x0000; // 保留
                     registerValues[8] = 0x0000; // 保留
-                    Log.e(TAG, "设置电源关闭: 保持设置，只关闭电源位(0x80->0x00)和控制位(0x01->0x00)");
+                    Log.e(TAG, "设置电源关闭: 保持设置，只关闭电源位(0x80->0x00)，控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
                 }
                 break;
             case CMD_MODE:
@@ -348,8 +370,11 @@ public class AirControlHandler {
                 registerValues[1] = 0x0018; // 默认温度24度
                 registerValues[2] = 0x0003; // 默认风速3
                 registerValues[3] = 0x0080; // 保持电源开启
-                registerValues[5] = 0x0001; // 保持控制位
-                Log.e(TAG, "设置模式: " + value + "，保持其他必要控制位");
+                registerValues[5] = getControlBit(); // 保持控制位（根据machineNo）
+                registerValues[6] = 0x0000; // 保留
+                registerValues[7] = 0x0000; // 保留
+                registerValues[8] = 0x0000; // 保留
+                Log.e(TAG, "设置模式: " + value + "，控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
                 break;
             case CMD_TEMP:
                 // 温度控制，保持其他必要位
@@ -357,8 +382,11 @@ public class AirControlHandler {
                 registerValues[1] = value; // 温度设置
                 registerValues[2] = 0x0003; // 保持风速
                 registerValues[3] = 0x0080; // 保持电源开启
-                registerValues[5] = 0x0001; // 保持控制位
-                Log.e(TAG, "设置温度: " + value + "度，保持其他必要控制位");
+                registerValues[5] = getControlBit(); // 保持控制位（根据machineNo）
+                registerValues[6] = 0x0000; // 保留
+                registerValues[7] = 0x0000; // 保留
+                registerValues[8] = 0x0000; // 保留
+                Log.e(TAG, "设置温度: " + value + "度，控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
                 break;
             case CMD_SPEED:
                 // 风速控制，保持其他必要位
@@ -366,8 +394,8 @@ public class AirControlHandler {
                 registerValues[1] = 0x0018; // 保持温度24度
                 registerValues[2] = value; // 风速设置
                 registerValues[3] = 0x0080; // 保持电源开启
-                registerValues[5] = 0x0001; // 保持控制位
-                Log.e(TAG, "设置风速: " + value + "，保持其他必要控制位");
+                registerValues[5] = getControlBit(); // 动态控制位
+                Log.e(TAG, "设置风速: " + value + "，控制位=0x" + String.format("%02X", getControlBit()) + " (机器" + machineNo + ")");
                 break;
         }
         
@@ -380,7 +408,7 @@ public class AirControlHandler {
                     registerValues
             );
             
-            Log.e(TAG, "发送原协议命令: " + bytesToHex(writeBytes));
+            // Log.e(TAG, "发送原协议命令: " + bytesToHex(writeBytes));
             
             // 发送命令并等待响应
             byte[] response = Rs485Executor.getInstance().write(writeBytes, 300);
@@ -588,32 +616,77 @@ public class AirControlHandler {
      */
     private void convertToTicaInnerStatus(TicaInnerStatus status, byte[] data) {
         if (data == null || data.length < 32) {
-            Log.e(TAG, "数据长度不足，无法解析");
+            Log.e(TAG, "数据长度不足，无法解析，实际长度: " + (data != null ? data.length : "null"));
             return;
         }
         
+        // 添加详细调试信息
+        Log.e(TAG, "*** 开始解析空调状态数据 ***");
+        Log.e(TAG, "原始数据长度: " + data.length);
+        Log.e(TAG, "原始数据: " + bytesToHex(data));
+        
         int[] intData = Rs485Utils.getInstance().toIntArray(data);
+        Log.e(TAG, "int数组长度: " + intData.length);
         
-        // 解析各项状态数据
-        status.setSettingMode(intData[0]);
-        status.setSettingTemp(intData[1]);
-        status.setSettingWindSpeed(intData[2]);
+        // 打印前8个寄存器的值
+        for (int i = 0; i < Math.min(8, intData.length); i++) {
+            Log.e(TAG, "intData[" + i + "] = 0x" + String.format("%04X", intData[i]) + " (" + intData[i] + ")");
+        }
         
-        // 计算机器编号对应的电源位
-        int iPow = (int) Math.pow(2.0d, (double) (this.machineNo - 1));
-        status.setPowerSetting((intData[3] & iPow) != 0);
+        // 重新分析寄存器映射：根据实际日志数据
+        // 从日志看：intData[12]=24(温度), intData[13]=3(风速), intData[14]=128(0x80电源)
+        // 但当前显示：模式=24, 温度=3, 风速=128，说明映射错位了
+        
+        // 最终修正映射：根据实际设备状态对比
+        // 设备实际状态：电源开启、温度24、风速自动、制冷模式
+        // 日志显示：intData[11]=24, intData[12]=3, intData[13]=128(0x80)
+        // 正确映射：温度=intData[11], 风速=intData[12], 电源=intData[13]
+        
+        status.setSettingTemp(intData[11]);      // 温度：24度 ✅
+        status.setSettingWindSpeed(intData[12]); // 风速：3 ✅
+        status.setSettingMode(intData[10]);      // 模式：从intData[10]读取
+        
+        // 电源状态：intData[13]包含0x80表示开启
+        int powerRegister = intData[13]; // 修正：从intData[13]读取电源(128=0x80)
+        boolean powerStatus = (powerRegister & 0x80) != 0;
+        status.setPowerSetting(powerStatus);
+        
+        // 详细调试信息
+        Log.e(TAG, "最终修正后的寄存器分析:");
+        Log.e(TAG, "intData[10] = " + intData[10] + " (模式)");
+        Log.e(TAG, "intData[11] = " + intData[11] + " (温度) -> 应该是24");
+        Log.e(TAG, "intData[12] = " + intData[12] + " (风速) -> 应该是3");
+        Log.e(TAG, "intData[13] = " + intData[13] + " (电源) -> 应该是128(0x80)");
+        Log.e(TAG, "电源状态最终分析 - intData[13]: 0x" + String.format("%04X", powerRegister) + ", 包含0x80: " + powerStatus);
         
         // 解析温度数据
-        status.setReturnAirTemperature(intData[8] / 10.0f);
-        status.setIntakeTemperature(intData[9] / 10.0f);
-        status.setMidDiskTemperature(intData[10] / 10.0f);
-        status.setOutletTemperature(intData[11] / 10.0f);
+        if (intData.length > 8) {
+            status.setReturnAirTemperature(intData[8] / 10.0f);
+            Log.e(TAG, "回风温度 - intData[8]: " + intData[8] + " -> " + (intData[8] / 10.0f));
+        }
+        if (intData.length > 9) {
+            status.setIntakeTemperature(intData[9] / 10.0f);
+        }
+        if (intData.length > 10) {
+            status.setMidDiskTemperature(intData[10] / 10.0f);
+        }
+        if (intData.length > 11) {
+            status.setOutletTemperature(intData[11] / 10.0f);
+        }
         
         // 解析运行状态
-        status.setModeRun(intData[4]);
-        status.setWindSpeedStatus(intData[5]);
-        status.setElectricAuxiliaryHeatingStatus(intData[6]);
-        status.setWaterPumpStatus(intData[7]);
+        if (intData.length > 4) {
+            status.setModeRun(intData[4]);
+        }
+        if (intData.length > 5) {
+            status.setWindSpeedStatus(intData[5]);
+        }
+        if (intData.length > 6) {
+            status.setElectricAuxiliaryHeatingStatus(intData[6]);
+        }
+        if (intData.length > 7) {
+            status.setWaterPumpStatus(intData[7]);
+        }
         
         // 解析错误状态
         if (intData.length > 12) {
@@ -622,6 +695,8 @@ public class AirControlHandler {
             status.setTH3Error(intData[14]);
             status.setTH4Error(intData[15]);
         }
+        
+        Log.e(TAG, "*** 空调状态数据解析完成 ***");
     }
     
     /**
@@ -656,6 +731,13 @@ public class AirControlHandler {
      */
     public TicaInnerStatus readStatus() {
         return readInnerStatus();
+    }
+    
+    /**
+     * 读取指定机器编号的空调状态
+     */
+    public TicaInnerStatus readStatus(int machineNo) {
+        return readInnerStatus(machineNo);
     }
     
     /**

@@ -104,7 +104,7 @@ public class UdpSerialAdapter {
      * @param baudRate 波特率
      */
     public void setup(int parity, int baudRate) {
-        Log.d(TAG, "设置串口参数: 校验位=" + parity + ", 波特率=" + baudRate);
+        Log.e(TAG, "设置串口参数: 校验位=" + parity + ", 波特率=" + baudRate);
         // 这里应该发送一个特殊的UDP包给系统服务，通知其设置串口参数
         // 由于我们没有原始应用中的dmsg和dxml类，这里简化处理
         try {
@@ -131,7 +131,7 @@ public class UdpSerialAdapter {
                 );
                 socket.send(packet);
                 Log.e(TAG, "发送数据到系统串口服务(" + SYSTEM_SERIAL_PORT + "): " + bytesToHex(data));
-                Log.e(TAG, "我们的源端口: " + socket.getLocalPort() + ", 期望在端口" + socket.getLocalPort() + "接收响应");
+                // Log.e(TAG, "我们的源端口: " + socket.getLocalPort() + ", 期望在端口" + socket.getLocalPort() + "接收响应");
             } catch (IOException e) {
                 Log.e(TAG, "发送数据失败", e);
                 throw e;
@@ -227,11 +227,9 @@ public class UdpSerialAdapter {
                         byte[] data = new byte[length];
                         System.arraycopy(packet.getData(), 0, data, 0, length);
                         
-                        Log.e(TAG, "*** 接收到UDP数据包 ***");
-                        Log.e(TAG, "来源地址: " + packet.getAddress().getHostAddress());
-                        Log.e(TAG, "来源端口: " + packet.getPort());
-                        Log.e(TAG, "数据长度: " + length);
-                        Log.e(TAG, "数据内容: " + bytesToHex(data));
+                        // Log.e(TAG, "*** 接收到UDP数据包 ***");
+                        Log.e(TAG, "来源地址: " + packet.getAddress().getHostAddress() + ", 来源端口: " + packet.getPort());
+                        Log.e(TAG, "接收到UDP数据包，数据内容: " + bytesToHex(data));
                         
                         synchronized (receiveBuffer) {
                             if (receiveBuffer.remaining() < length) {

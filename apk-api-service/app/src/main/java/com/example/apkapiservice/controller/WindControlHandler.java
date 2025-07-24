@@ -43,6 +43,17 @@ public class WindControlHandler {
     public static final int SPEED_MEDIUM = 1;   // 中风速
     public static final int SPEED_LOW = 2;      // 低风速
     
+    // 新风控制寄存器地址常量（基于实际报文）
+    private static final int WIND_POWER_LOW_ADDR = 0x0032;    // 低档风控制地址 (50)
+    private static final int WIND_POWER_MED_ADDR = 0x0034;    // 中档风控制地址 (52)
+    private static final int WIND_POWER_HIGH_ADDR = 0x0034;   // 高档风控制地址 (52)
+    private static final int WIND_MODE_ADDR = 0x0033;         // 模式控制地址 (51)
+    
+    // 新风模式值常量（基于实际报文）
+    public static final int MODE_VENTILATION = 0;  // 通风模式 (0x0000)
+    public static final int MODE_DEHUMIDIFY = 2;   // 除湿模式 (0x0002)
+    public static final int MODE_AUTO_NEW = 4;     // 自动模式 (0x0004)
+    
     // 电源常量
     public static final int POWER_OFF = 0;      // 关机
     public static final int POWER_ON = 1;       // 开机
@@ -305,5 +316,164 @@ public class WindControlHandler {
      */
     public WindStatus getCurrentStatus() {
         return this.currentStatus;
+    }
+    
+    // ==================== 基于实际报文的精确控制方法 ====================
+    
+    /**
+     * 发送单寄存器控制命令（基于实际报文）
+     * @param registerAddress 寄存器地址
+     * @param registerValue 寄存器值
+     * @return 是否成功
+     */
+    private boolean sendSingleRegisterCommand(int registerAddress, int registerValue) {
+        try {
+            byte[] writeBytes = Rs485Utils.getInstance().getSingleWriteSendBytes(
+                    WIND_ADDRESS, WRITE_FUNCTION_CODE, registerAddress, registerValue);
+            
+            Log.d(TAG, "发送新风单寄存器报文: " + bytesToHex(writeBytes));
+            
+            byte[] response = Rs485Executor.getInstance().write(writeBytes, 300);
+            
+            if (Rs485Utils.getInstance().returnCheck(response, writeBytes)) {
+                Log.d(TAG, "新风单寄存器控制成功！");
+                return true;
+            } else {
+                Log.e(TAG, "新风单寄存器控制失败");
+                return false;
+            }
+        } catch (InterruptedException e) {
+            Log.e(TAG, "发送新风控制命令异常", e);
+            return false;
+        }
+    }
+    
+    /**
+     * 控制低档风电源（地址 0x0032）
+     * @param power 0-关闭, 1-开启
+     * @return 是否成功
+     */
+    public boolean setLowWindPower(int power) {
+        Log.d(TAG, "设置低档风电源: " + (power == 1 ? "开启" : "关闭"));
+        return sendSingleRegisterCommand(WIND_POWER_LOW_ADDR, power);
+    }
+    
+    /**
+     * 控制中档风电源（地址 0x0034）
+     * @param power 0-关闭, 1-开启
+     * @return 是否成功
+     */
+    public boolean setMediumWindPower(int power) {
+        Log.d(TAG, "设置中档风电源: " + (power == 1 ? "开启" : "关闭"));
+        return sendSingleRegisterCommand(WIND_POWER_MED_ADDR, power);
+    }
+    
+    /**
+     * 控制高档风电源（地址 0x0034）
+     * @param power 0-关闭, 1-开启
+     * @return 是否成功
+     */
+    public boolean setHighWindPower(int power) {
+        Log.d(TAG, "设置高档风电源: " + (power == 1 ? "开启" : "关闭"));
+        return sendSingleRegisterCommand(WIND_POWER_HIGH_ADDR, power);
+    }
+    
+    /**
+     * 统一的新风控制接口（基于实际报文）
+     * @param speed 风速等级 (SPEED_LOW/SPEED_MEDIUM/SPEED_HIGH)
+     * @param power 电源状态 (0-关闭, 1-开启)
+     * @return 是否成功
+     */
+    public boolean controlWindBySpeed(int speed, int power) {
+        Log.d(TAG, "统一新风控制 - 风速: " + speed + ", 电源: " + power);
+        
+        switch (speed) {
+            case SPEED_LOW:
+                return setLowWindPower(power);
+            case SPEED_MEDIUM:
+                return setMediumWindPower(power);
+            case SPEED_HIGH:
+                return setHighWindPower(power);
+            default:
+                Log.e(TAG, "不支持的风速等级: " + speed);
+                return false;
+        }
+    }
+    
+    /**
+     * 关闭所有档位的新风
+     * @return 是否成功
+     */
+    public boolean turnOffAllWind() {
+        Log.d(TAG, "关闭所有档位的新风");
+        boolean success = true;
+        success &= setLowWindPower(POWER_OFF);
+        success &= setMediumWindPower(POWER_OFF);
+        success &= setHighWindPower(POWER_OFF);
+        return success;
+    }
+    
+    // ==================== 新风模式控制方法 ====================
+    
+    /**
+     * 设置新风模式（基于实际报文）
+     * @param mode 模式值 (MODE_VENTILATION/MODE_DEHUMIDIFY/MODE_AUTO_NEW)
+     * @return 是否成功
+     */
+    public boolean setWindMode(int mode) {
+        String modeName;
+        switch (mode) {
+            case MODE_VENTILATION:
+                modeName = "通风模式";
+                break;
+            case MODE_DEHUMIDIFY:
+                modeName = "除湿模式";
+                break;
+            case MODE_AUTO_NEW:
+                modeName = "自动模式";
+                break;
+            default:
+                Log.e(TAG, "不支持的新风模式: " + mode);
+                return false;
+        }
+        
+        Log.d(TAG, "设置新风模式: " + modeName + " (" + mode + ")");
+        return sendSingleRegisterCommand(WIND_MODE_ADDR, mode);
+    }
+    
+    /**
+     * 设置通风模式
+     * @return 是否成功
+     */
+    public boolean setVentilationMode() {
+        return setWindMode(MODE_VENTILATION);
+    }
+    
+    /**
+     * 设置除湿模式
+     * @return 是否成功
+     */
+    public boolean setDehumidifyMode() {
+        return setWindMode(MODE_DEHUMIDIFY);
+    }
+    
+    /**
+     * 设置自动模式
+     * @return 是否成功
+     */
+    public boolean setAutoMode() {
+        return setWindMode(MODE_AUTO_NEW);
+    }
+    
+    /**
+     * 字节数组转十六进制字符串
+     */
+    private String bytesToHex(byte[] bytes) {
+        if (bytes == null) return "null";
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString().trim();
     }
 }
